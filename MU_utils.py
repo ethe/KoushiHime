@@ -5,6 +5,8 @@ import logging
 import logging.handlers
 import os
 import sys
+import pdb
+import re
 os.chdir(os.path.dirname(sys.argv[0]))
 r=redis.Redis(host="localhost",port=6379,db=0)
 def unique_str():
@@ -28,12 +30,10 @@ def loggingInit(logname):
 def for_dict(dic):
     Categories = []
     if isinstance(dic,dict):
-        for i in range(len(dic)):
-            key = dic.keys()[i]
+            key = dic['query']['pages'].keys()[0]
             value= dic[key]
-            if key == 'categories':
-                for j in range(len(value)):
-                    cdict=value[j]
-                    Categories.append(cdict['title'])
-                    print Categories
-            for_dict(value)
+            for i in value:
+                if value[i]['title']:
+                    Categories.append(value[i]['title'])
+                break
+    return Categories
