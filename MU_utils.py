@@ -7,6 +7,7 @@ import os
 import sys
 import pdb
 import re
+import collections
 os.chdir(os.path.dirname(sys.argv[0]))
 r = redis.Redis(host="localhost", port=6379, db=0)
 def unique_str():
@@ -51,12 +52,21 @@ def _decode_dict(data):
             value = _decode_dict(value)
         rv[key] = value
     return rv
-def for_dict(dic):
+def for_cat(dic):
     Categories = []
     if isinstance(dic, dict):
         key = dic['query']['pages'].keys()[0]
         value = dic['query']['pages'][key]
-        print type(value)
         for i in range(len(value['categories'])):
             Categories.append(value['categories'][i]['title'])
     return Categories
+def for_rc(dic):
+    rc = []
+    if isinstance(dic, collections.OrderedDict):
+        key = dic['query'].keys()[0]
+        value = dic['query'][key]
+        print type(value)
+        for i in range(len(value)):
+            rc.append(value[i]['title'])
+    return rc
+
