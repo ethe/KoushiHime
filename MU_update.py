@@ -14,8 +14,8 @@ import weibo
 sys.setdefaultencoding('utf-8')
 #from MU_conf import MUconf
 from MU_utils import r,unique_str,loggingInit,for_dict,_decode_dict
-queue=[]
 os.chdir(os.path.dirname(sys.argv[0]))
+PUSHEDPREFIX="PUSHED-"
 log=loggingInit('log/update.log')
 def GetCategory(title):
     apiurl="http://zh.moegirl.org/api.php"
@@ -71,11 +71,19 @@ def ForbiddenItemsFilter(item):
             return False
             break
     return True
-class MU_UpdateData:
+def ForbiddenItemPushed(title):
+    print PUSHEDPREFIX+title
+    for key in r.hkeys('queue'):
+        if r.hget('queue',key)==PUSHEDPREFIX+title:
+            return False
+            break
+    return True
+class MU_UpdateData():
     def __enter__(self):
         return self
     def __exit__(self,type,value,traceback):
         log.debug('value:%s,traceback:%s' %value,traceback)
-item='台阶上的玻璃鞋'
-v=ForbiddenItemsFilter(item)
+    
+item='123'
+v=ForbiddenItemPushed(item)
 print v
