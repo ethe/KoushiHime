@@ -11,9 +11,9 @@ from bs4 import BeautifulSoup
 import logging,logging.handlers
 import traceback
 import weibo
-
+sys.setdefaultencoding('utf-8')
 #from MU_conf import MUconf
-from MU_utils import r,unique_str,loggingInit,for_dict
+from MU_utils import r,unique_str,loggingInit,for_dict,_decode_dict
 queue=[]
 os.chdir(os.path.dirname(sys.argv[0]))
 log=loggingInit('log/update.log')
@@ -23,9 +23,10 @@ def GetCategory(title):
     req=urllib2.Request(url=apiurl,data=parmas)
     res_data=urllib2.urlopen(req)
     ori=res_data.read()
-    categories=json.loads(ori)
-    for_dict(categories)
-    return categories
+    categories=json.loads(ori, object_hook=_decode_dict)
+    cat=for_dict(categories)
+    print cat
+    return cat
 def GetImage(url):
     try:
         f=urllib.urlopen(url)
@@ -62,9 +63,19 @@ def GetImage(url):
             log.debug(e)
             return None
     return TheImageIsReadyToPush
-
+def ForbiddenItemsFilter(item):
+    cat=GetCategory(item)
+    ForCat="Category:屏蔽更新姬推送的条目"
+    for i in range(len(cat)):
+        if cat[i]==ForCat.encode('utf-8'):
+            return False
+            break
+    return True
 class MU_UpdateData:
     def __enter__(self):
         return self
     def __exit__(self,type,value,traceback):
         log.debug('value:%s,traceback:%s' %value,traceback)
+item='台阶上的玻璃鞋'
+v=ForbiddenItemsFilter(item)
+print v
