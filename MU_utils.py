@@ -61,12 +61,12 @@ def for_cat(dic):
             Categories.append(value['categories'][i]['title'])
     return Categories
 def for_rc(dic):
-    rc = []
+    #rc = []
     if isinstance(dic, collections.OrderedDict):
         key = dic['query'].keys()[0]
         value = dic['query'][key]
-        print type(value)
-        for i in range(len(value)):
-            rc.append(value[i]['title'])
-    return rc
+        #print type(value)
+        #for i in range(len(value)):
+            #rc.append(value[i]['title'])
+    return value
 
