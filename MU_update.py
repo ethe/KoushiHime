@@ -42,7 +42,6 @@ def GetImage(url):
         print type(image_div)
         for i in range(len(image_div)):
             imgtag=image_div[i].find('img')
-            print imgtag
             if (int(imgtag['width']) > 100 and int(imgtag['height']) > 200):
                 img = imgtag['src']
                 break
@@ -106,12 +105,18 @@ class MU_UpdateData(object):
         self.cache=filter(ForbiddenItemsFilter,self.cache)
         self.cache=filter(ForbiddenItemPushed,self.cache)
         return self.cache
-    #def SaveRecentChanges(self):
-     #   self.FilterValid()
-      #  for item in self.cache:
-
-
+    def SaveRecentChanges(self):
+        self.FilterValid()
+        for item in self.cache:
+            itemkey=EDITEDPREFIX+item
+            print itemkey
+            r.hset('queue',itemkey,item)
+            timenow=time.time()
+            r.zadd('expire',itemkey,timenow)
+    def RemoveExpiredItems(self):
+        r.zrange('expire',0,-1)
+        
 item='123'
 update=MU_UpdateData()
-v=update.FilterValid()
+v=update.SaveRecentChanges()
 print v

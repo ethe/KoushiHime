@@ -57,8 +57,11 @@ def for_cat(dic):
     if isinstance(dic, dict):
         key = dic['query']['pages'].keys()[0]
         value = dic['query']['pages'][key]
-        for i in range(len(value['categories'])):
-            Categories.append(value['categories'][i]['title'])
+        try:
+            for i in range(len(value['categories'])):
+                Categories.append(value['categories'][i]['title'])
+        except:
+            pass
     return Categories
 def for_rc(dic):
     #rc = []
@@ -69,4 +72,3 @@ def for_rc(dic):
         #for i in range(len(value)):
             #rc.append(value[i]['title'])
     return value
-
