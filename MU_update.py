@@ -137,4 +137,3 @@ item='123'
 update=MU_UpdateData()
 #update.SaveRecentChanges()
 update.RemoveExpiredItems()
-#print a
