@@ -19,6 +19,7 @@ os.chdir(os.path.dirname(sys.argv[0]))
 PUSHEDPREFIX="PUSHED-"
 EDITEDPREFIX='EDITED-'
 EXPIRETIME='72*3600'
+THREEDAYS=259200
 log=loggingInit('log/update.log')
 def GetCategory(title):
     apiurl="http://zh.moegirl.org/api.php"
@@ -29,8 +30,9 @@ def GetCategory(title):
     categories=json.loads(ori, object_hook=_decode_dict)
     cat=for_cat(categories)
     return cat
-def GetImage(url):
+def GetImage(title):
     try:
+        url="http://zh.moegirl.org/"+title
         f=urllib.urlopen(url)
     except:
         return None
@@ -39,10 +41,9 @@ def GetImage(url):
     ssrc=BeautifulSoup(src,"html.parser")
     try:
         image_div=ssrc.find_all('a',class_='image')
-        print type(image_div)
         for i in range(len(image_div)):
             imgtag=image_div[i].find('img')
-            if (int(imgtag['width']) > 100 and int(imgtag['height']) > 200):
+            if (int(imgtag['width']) > 200 and int(imgtag['height']) > 100): #出问题都是anna的锅
                 img = imgtag['src']
                 break
             else:
@@ -54,15 +55,19 @@ def GetImage(url):
         os.makedirs('imgcache')
     name=unique_str()
     TheImageIsReadyToPush=False
-    try:
-        with open('imgcache/'+name,'wb') as f:
-            con=urllib.urlopen(img)
-            f.write(con.read())
-            f.flush()
-            TheImageIsReadyToPush=True
-    except BaseException, e:
-            log.debug(e)
-            return None
+    if locals().has_key("img"):
+        try:
+            with open('imgcache/'+name,'wb') as f:
+                con=urllib.urlopen("http:"+img)
+                f.write(con.read())
+                f.flush()
+                TheImageIsReadyToPush=True
+                r.hset('img',EDITEDPREFIX+title,name)
+        except BaseException, e:
+                log.debug(e)
+                return None
+    else:
+        return None
     return TheImageIsReadyToPush
 def ForbiddenItemsFilter(item):
     cat=GetCategory(item)
@@ -74,10 +79,11 @@ def ForbiddenItemsFilter(item):
     return True
 def ForbiddenItemPushed(title):
     for key in r.hkeys('queue'):
-        if r.hget('queue',key)==PUSHEDPREFIX+title:
+        if r.hget('queue',key)==EDITEDPREFIX+title:
             return False
             break
     return True
+
 class MU_UpdateData(object):
     def __init__(self):
         super(MU_UpdateData,self).__init__()
@@ -86,19 +92,12 @@ class MU_UpdateData(object):
     def initupdater(self):
         self.GetRecentChanges(2)
     def GetRecentChanges(self):
-        apiurl="http://zh.moegirl.org/api.php"
-        format="%Y%m%d%H%M%S"
-        utc=datetime.datetime.utcnow()
-        rcstart=(utc-datetime.timedelta(hours=2)).strftime(format)
-        rcend=utc.strftime(format)
-        parmas=urllib.urlencode({'format':'json','action':'query','list':'recentchanges','rcstart':rcstart,'rcend':rcend,'rcdir':'newer','rcnamespace':'0','rctoponly':'','rctype':'edit|new','continue':''})
-        req=urllib2.Request(url=apiurl,data=parmas)
-        res_data=urllib2.urlopen(req)
-        ori=res_data.read()
-        rcc=json.loads(ori, object_hook=_decode_dict,object_pairs_hook=OrderedDict)
-        value=for_rc(rcc)
+        value=for_rc()
         for i in range(len(value)):
-            self.cache.append(value[i]['title'])
+            if value[i]['newlen']>1000:
+                self.cache.append(value[i]['title'])
+            else:
+                pass
         return self.cache
     def FilterValid(self):
         self.GetRecentChanges()
@@ -108,15 +107,34 @@ class MU_UpdateData(object):
     def SaveRecentChanges(self):
         self.FilterValid()
         for item in self.cache:
-            itemkey=EDITEDPREFIX+item
-            print itemkey
-            r.hset('queue',itemkey,item)
-            timenow=time.time()
-            r.zadd('expire',itemkey,timenow)
+            flag=GetImage(item)
+            if flag==True:
+                itemkey=EDITEDPREFIX+item
+                r.hset('queue',itemkey,item)
+                timenow=time.time()
+                r.zadd('expire',itemkey,timenow)
+            else:
+                pass
     def RemoveExpiredItems(self):
-        r.zrange('expire',0,-1)
-        
+        timenow=time.time()
+        ThreeDaysAgo=time.time()-THREEDAYS
+        zset=r.zrangebyscore('expire',ThreeDaysAgo,timenow)
+        hkeys=r.hkeys('queue')
+        setofzset=set(zset)
+        setofhkeys=set(hkeys)
+        intersection=list(setofzset&setofhkeys)
+        print intersection
+        print zset
+        for i in range(len(hkeys)):
+            if hkeys[i] not in intersection:
+                r.zrem('expire',hkeys[i])
+                r.hdel('queue',hkeys[i])
+                name=r.hget('img',hkeys[i])
+                os.remove('imgcache/'+name)
+                r.hdel('img',hkeys[i])
+
 item='123'
 update=MU_UpdateData()
-v=update.SaveRecentChanges()
-print v
+#update.SaveRecentChanges()
+update.RemoveExpiredItems()
+#print a

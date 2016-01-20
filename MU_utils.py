@@ -7,7 +7,13 @@ import os
 import sys
 import pdb
 import re
-import collections
+import time
+import datetime
+import json
+import urllib
+import urllib2
+from collections import OrderedDict
+sys.setdefaultencoding('utf-8')
 os.chdir(os.path.dirname(sys.argv[0]))
 r = redis.Redis(host="localhost", port=6379, db=0)
 def unique_str():
@@ -63,12 +69,22 @@ def for_cat(dic):
         except:
             pass
     return Categories
-def for_rc(dic):
+def for_rc():
     #rc = []
-    if isinstance(dic, collections.OrderedDict):
-        key = dic['query'].keys()[0]
-        value = dic['query'][key]
+    apiurl="http://zh.moegirl.org/api.php"
+    format="%Y%m%d%H%M%S"
+    utc=datetime.datetime.utcnow()
+    rcstart=(utc-datetime.timedelta(hours=1)).strftime(format)
+    rcend=utc.strftime(format)
+    parmas=urllib.urlencode({'format':'json','action':'query','list':'recentchanges','rcstart':rcstart,'rcend':rcend,'rcdir':'newer','rcnamespace':'0','rctoponly':'','rctype':'edit|new','continue':'','rcprop':'title|sizes'})
+    req=urllib2.Request(url=apiurl,data=parmas)
+    res_data=urllib2.urlopen(req)
+    ori=res_data.read()
+    rcc=json.loads(ori,object_hook=_decode_dict)
+    OrderedDict(rcc)
+    key = rcc['query'].keys()[0]
+    lists = rcc['query'][key]
         #print type(value)
         #for i in range(len(value)):
             #rc.append(value[i]['title'])
-    return value
+    return lists
