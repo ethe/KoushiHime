@@ -14,6 +14,7 @@ import weibo
 from collections import OrderedDict
 sys.setdefaultencoding('utf-8')
 #from MU_conf import MUconf
+from MU_weibo import post,PrepareToken
 from MU_utils import r,unique_str,loggingInit,for_cat,for_rc,_decode_dict
 os.chdir(os.path.dirname(sys.argv[0]))
 PUSHEDPREFIX="PUSHED-"
@@ -79,7 +80,7 @@ def ForbiddenItemsFilter(item):
     return True
 def ForbiddenItemPushed(title):
     for key in r.hkeys('queue'):
-        if r.hget('queue',key)==EDITEDPREFIX+title:
+        if r.hget('queue',key)==PUSHEDPREFIX+title:
             return False
             break
     return True
@@ -132,8 +133,30 @@ class MU_UpdateData(object):
                 name=r.hget('img',hkeys[i])
                 os.remove('imgcache/'+name)
                 r.hdel('img',hkeys[i])
-
+    def GetItemToSend(self):
+        KeyList=r.hkeys('queue')
+        for i in range(len(KeyList)):
+            ToBeSendTitle=r.hget('queue',KeyList[i])
+            ToBeSendImage=r.hget('img',KeyList[i])
+            r.zadd('queuenumber',ToBeSendTitle,i)
+            r.hset('imgkey',ToBeSendTitle,ToBeSendImage)
+    def PostItem(self):
+        Keys=r.hkeys('queue')
+        ReadyToPostItem=r.hget('queue',Keys[0])
+        UnPushed=ForbiddenItemPushed(ReadyToPostItem)
+        if UnPushed==True:
+            Image='imgcache/'+queue[ReadyToPostItem]
+            post(status=ReadyToPostItem,pic=Image)
+            r.zrem('queuenumber',ReadyToPostItem)
+            r.hdel('imgkey',ReadyToPostItem)
+            r.hdel('queue',Keys[0])
+            r.hset('queue',PUSHEDPREFIX+ReadyToPostItem,ReadyToPostItem)
+        else:
+            pass
 item='123'
 update=MU_UpdateData()
 #update.SaveRecentChanges()
-update.RemoveExpiredItems()
+#update.RemoveExpiredItems()
+PrepareToken()
+update.GetItemToSend()
+update.PostItem()
