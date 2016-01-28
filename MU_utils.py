@@ -5,6 +5,7 @@ import logging
 import logging.handlers
 import os
 import sys
+reload(sys)
 import pdb
 import re
 import time

@@ -14,7 +14,7 @@ import weibo
 from collections import OrderedDict
 sys.setdefaultencoding('utf-8')
 #from MU_conf import MUconf
-from MU_weibo import post,PrepareToken
+from MU_weibo import post,PrepareLogin
 from MU_utils import r,unique_str,loggingInit,for_cat,for_rc,_decode_dict
 os.chdir(os.path.dirname(sys.argv[0]))
 PUSHEDPREFIX="PUSHED-"
@@ -82,8 +82,8 @@ def ForbiddenItemPushed(title):
     for key in r.hkeys('queue'):
         if r.hget('queue',key)==PUSHEDPREFIX+title:
             return False
-            break
-    return True
+        else:
+            return True
 
 class MU_UpdateData(object):
     def __init__(self):
@@ -118,21 +118,19 @@ class MU_UpdateData(object):
                 pass
     def RemoveExpiredItems(self):
         timenow=time.time()
-        ThreeDaysAgo=time.time()-THREEDAYS
+        ThreeDaysAgo=time.time()-12
         zset=r.zrangebyscore('expire',ThreeDaysAgo,timenow)
         hkeys=r.hkeys('queue')
         setofzset=set(zset)
         setofhkeys=set(hkeys)
         intersection=list(setofzset&setofhkeys)
-        print intersection
-        print zset
         for i in range(len(hkeys)):
             if hkeys[i] not in intersection:
                 r.zrem('expire',hkeys[i])
                 r.hdel('queue',hkeys[i])
                 name=r.hget('img',hkeys[i])
                 os.remove('imgcache/'+name)
-                r.hdel('img',hkeys[i])
+                r.hdel('img',r.hget('img',hkeys[i])
     def GetItemToSend(self):
         KeyList=r.hkeys('queue')
         for i in range(len(KeyList)):
@@ -144,19 +142,20 @@ class MU_UpdateData(object):
         Keys=r.hkeys('queue')
         ReadyToPostItem=r.hget('queue',Keys[0])
         UnPushed=ForbiddenItemPushed(ReadyToPostItem)
+        print UnPushed
         if UnPushed==True:
-            Image='imgcache/'+queue[ReadyToPostItem]
+            Image='imgcache/'+r.hget('img',EDITEDPREFIX+ReadyToPostItem)
             post(status=ReadyToPostItem,pic=Image)
             r.zrem('queuenumber',ReadyToPostItem)
-            r.hdel('imgkey',ReadyToPostItem)
-            r.hdel('queue',Keys[0])
+            r.hdel('imgkey',EDITEDPREFIX+ReadyToPostItem)
+            r.hdel('queue',EDITEDPREFIX+ReadyToPostItem)
             r.hset('queue',PUSHEDPREFIX+ReadyToPostItem,ReadyToPostItem)
         else:
             pass
 item='123'
 update=MU_UpdateData()
 #update.SaveRecentChanges()
-#update.RemoveExpiredItems()
-PrepareToken()
-update.GetItemToSend()
-update.PostItem()
+update.RemoveExpiredItems()
+#PrepareLogin()
+#update.GetItemToSend()
+#update.PostItem()
