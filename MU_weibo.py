@@ -108,7 +108,7 @@ def post(status,pic):
     f=open(pic,'r')
     requesturl='https://api.weibo.com/2/short_url/shorten.json?access_token='+r.get('access_token')+'&url_long=http://zh.moegirl.org/'+status
     print requesturl
-    req=urllib2.Request(requesturl.decode('utf-8').encode('gbk'))
+    req=urllib2.Request(requesturl)
     res=urllib2.urlopen(req).read()
     data=json.loads(res,object_hook=_decode_dict)
     print data

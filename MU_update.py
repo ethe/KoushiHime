@@ -80,10 +80,11 @@ def ForbiddenItemsFilter(item):
     return True
 def ForbiddenItemPushed(title):
     for key in r.hkeys('queue'):
-        if r.hget('queue',key)==PUSHEDPREFIX+title:
+        if key==PUSHEDPREFIX+title:
             return False
+            break
         else:
-            return True
+            pass
 
 class MU_UpdateData(object):
     def __init__(self):
@@ -130,7 +131,8 @@ class MU_UpdateData(object):
                 r.hdel('queue',hkeys[i])
                 name=r.hget('img',hkeys[i])
                 os.remove('imgcache/'+name)
-                r.hdel('img',r.hget('img',hkeys[i])
+                r.hdel('img',r.hget('queue',hkeys[i]))
+
     def GetItemToSend(self):
         KeyList=r.hkeys('queue')
         for i in range(len(KeyList)):
@@ -143,7 +145,7 @@ class MU_UpdateData(object):
         ReadyToPostItem=r.hget('queue',Keys[0])
         UnPushed=ForbiddenItemPushed(ReadyToPostItem)
         print UnPushed
-        if UnPushed==True:
+        if UnPushed is not False:
             Image='imgcache/'+r.hget('img',EDITEDPREFIX+ReadyToPostItem)
             post(status=ReadyToPostItem,pic=Image)
             r.zrem('queuenumber',ReadyToPostItem)
@@ -155,7 +157,8 @@ class MU_UpdateData(object):
 item='123'
 update=MU_UpdateData()
 #update.SaveRecentChanges()
-update.RemoveExpiredItems()
-#PrepareLogin()
-#update.GetItemToSend()
-#update.PostItem()
+#update.RemoveExpiredItems()
+PrepareLogin()
+update.GetItemToSend()
+update.PostItem()
+
