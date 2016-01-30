@@ -53,35 +53,6 @@ def GetSp(passwd,servertime,nonce):
     pwd1= rsa.encrypt(pwd, pub_key)
     pwd1=binascii.b2a_hex(pwd1)
     return pwd1
-def LoginToWeibo():
-    apiurl=client.get_authorize_url()
-    authurl='https://api.weibo.com/oauth2/authorize'
-    url='https://login.sina.com.cn/sso/login.php?client=ssologin.js(v1.4.15)'
-    #url = 'http://login.sina.com.cn/sso/login.php?client=ssologin.js(v1.3.18)'
-    cj = cookielib.CookieJar()
-    username=GetSu('')
-    Secret=GetSecret()
-    passwd=GetSp('',Secret[0],Secret[1])
-    postdata['servertime']=Secret[0]
-    postdata['nonce']=Secret[1]
-    postdata['sp']=passwd
-    postdata['su']=username
-    form=urllib.urlencode(postdata)
-    opener=urllib2.build_opener(urllib2.HTTPCookieProcessor(cj),urllib2.HTTPHandler)
-    opener.addheaders=[('User-agent',user_agent)]
-    urllib2.install_opener(opener)
-    req=urllib2.Request(url=url,data=form,headers=headers)
-    result=urllib2.urlopen(req)
-    text=result.read()
-    #rep=json.loads(text)
-    #ticket=rep['ticket']
-    #authpostdata['ticket']=ticket
-    #authform=urllib.urlencode(authpostdata)
-    #authreq=urllib2.Request(url=authurl,data=authform,headers=authheaders)
-    #authreq.get_method = lambda : 'HEAD'
-    #authresult=urllib2.urlopen(authreq)
-    #authtext=authresult.info()
-    #print authtext
     p = re.compile('location\.replace\(\'(.*?)\'\)')
     try:
         login_url = p.search(text).group(1)

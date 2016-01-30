@@ -135,11 +135,22 @@ class MU_UpdateData(object):
 
     def GetItemToSend(self):
         KeyList=r.hkeys('queue')
-        for i in range(len(KeyList)):
-            ToBeSendTitle=r.hget('queue',KeyList[i])
-            ToBeSendImage=r.hget('img',KeyList[i])
-            r.zadd('queuenumber',ToBeSendTitle,i)
-            r.hset('imgkey',ToBeSendTitle,ToBeSendImage)
+        scorequeue=r.zrevrange('queuenumber',0,-1)
+        try:
+            lastnumber=int(r.zscore('queuenumber',scorequeue[0]))
+            for i in range(len(KeyList)):
+                ToBeSendTitle=r.hget('queue',KeyList[i])
+                ToBeSendImage=r.hget('img',KeyList[i])
+                r.zadd('queuenumber',ToBeSendTitle,i)
+                r.zincrby('queuenumber',lastnumber,ToBeSendTitle)
+                r.hset('imgkey',ToBeSendTitle,ToBeSendImage)
+        except:
+            for i in range(len(KeyList)):
+                ToBeSendTitle=r.hget('queue',KeyList[i])
+                ToBeSendImage=r.hget('img',KeyList[i])
+                r.zadd('queuenumber',ToBeSendTitle,i)
+                r.zincrby('queuenumber',1,ToBeSendTitle)
+                r.hset('imgkey',ToBeSendTitle,ToBeSendImage)
     def PostItem(self):
         Keys=r.hkeys('queue')
         ReadyToPostItem=r.hget('queue',Keys[0])
