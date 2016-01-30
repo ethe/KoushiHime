@@ -19,48 +19,7 @@ headers = {'User-Agent':user_agent}
 authheaders={'User-Agent':user_agent,'host':'api.weibo.com','method':'POST','content-type':'application/x-www-form-urlencoded','origin':'https://api.weibo.com'}
 Code=''
 client=APIClient(app_key=APP_KEY,app_secret=APP_SECRET,redirect_uri=CALLBACK_URL)
-regcallback='https%3A%2F%2Fapi.weibo.com%2F2%2Foauth2%2Fauthorize%3Fclient_id%3D563928974%26response_type%3Dcode%26display%3Ddefault%26redirect_uri%3Dhttp%253A%252F%252Fup.acggirl.moe%26from%3D%26with_cookie%3D'
-redirecturi='http://up.acggirl.moe'
-postdata={'cdult':'2','entry':'openapi','gateway':'1','from':'',"savestate":'0','userticket':'1','pagerefer':'','rsakv': '1330428213','prelt':'169','su': '','service': 'miniblog','servertime':'','nonce':'','pwencode':'rsa2','ct':'1800','encoding':'UTF-8','domain':'weibo.com','sp':'','returntype':'TEXT','vsnf':'1','s':"1"}
-authpostdata={'action':'login','display':'default','withOfficalFlag':0,'quick_auth':'null','withOfficalAccount':'','scope':'','ticket':'','isLoginSina':'','response_type':'code','regCallback':regcallback,'redirect_uri':redirecturi,'client_id':APP_KEY,'appkey62':'Ugu6y','state':'','verifyToken':'null','from':'','switchLogin':0,'userid':'','passwd':''}
 
-def GetSecret():
-    se_url='http://login.sina.com.cn/sso/prelogin.php?entry=weibo&callback=sinaSSOController.preloginCallBack&su=dW5kZWZpbmVk&client=ssologin.js(v1.3.18)&_=1329806375939'
-    data = urllib2.urlopen(se_url).read()
-    p = re.compile('\((.*)\)')
-    try:
-        json_data = p.search(data).group(1)
-        data = json.loads(json_data)
-        servertime = str(data['servertime'])
-        nonce = data['nonce']
-        return servertime, nonce
-    except:
-        return None
-def GetSu(username):
-    username_ = urllib.quote(username)
-    username=base64.encodestring(username_)[:-1]
-    return username
-def GetSp(passwd,servertime,nonce):
-    #password=hashlib.sha1(passwd).hexdigest()
-    #password1=hashlib.sha1(password).hexdigest()
-    #password2=password1+servertime+nonce
-    #password3=hashlib.sha1(password2).hexdigest()
-    #return password3
-    pubkey='EB2A38568661887FA180BDDB5CABD5F21C7BFD59C090CB2D245A87AC253062882729293E5506350508E7F9AA3BB77F4333231490F915F6D63C55FE2F08A49B353F444AD3993CACC02DB784ABBB8E42A9B1BBFFFB38BE18D78E87A0E41B9B8F73A928EE0CCEE1F6739884B9777E4FE9E88A1BBE495927AC4A799B3181D6442443'
-    rsaPublickey = int(pubkey, 16)
-    pub_key = rsa.PublicKey(rsaPublickey, 65537)
-    pwd = str(servertime)+'\t'+str(nonce)+'\n'+str(passwd)
-    pwd1= rsa.encrypt(pwd, pub_key)
-    pwd1=binascii.b2a_hex(pwd1)
-    return pwd1
-    p = re.compile('location\.replace\(\'(.*?)\'\)')
-    try:
-        login_url = p.search(text).group(1)
-        print login_url
-        urllib2.urlopen(login_url)
-        print "登录成功!"
-    except:
-        print 'Login error!'
         
 def GetCode(code):
     Code=code
