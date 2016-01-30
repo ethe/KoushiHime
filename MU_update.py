@@ -78,13 +78,13 @@ def ForbiddenItemsFilter(item):
             return False
             break
     return True
+    
 def ForbiddenItemPushed(title):
     for key in r.hkeys('queue'):
         if key==PUSHEDPREFIX+title:
             return False
             break
-        else:
-            pass
+    return True
 
 class MU_UpdateData(object):
     def __init__(self):
@@ -119,7 +119,7 @@ class MU_UpdateData(object):
                 pass
     def RemoveExpiredItems(self):
         timenow=time.time()
-        ThreeDaysAgo=time.time()-12
+        ThreeDaysAgo=time.time()-THREEDAYS
         zset=r.zrangebyscore('expire',ThreeDaysAgo,timenow)
         hkeys=r.hkeys('queue')
         setofzset=set(zset)
@@ -137,31 +137,35 @@ class MU_UpdateData(object):
         KeyList=r.hkeys('queue')
         scorequeue=r.zrevrange('queuenumber',0,-1)
         try:
-            lastnumber=int(r.zscore('queuenumber',scorequeue[0]))
+            lastnumber=r.zscore('queuenumber',scorequeue[0])
             for i in range(len(KeyList)):
                 ToBeSendTitle=r.hget('queue',KeyList[i])
                 ToBeSendImage=r.hget('img',KeyList[i])
-                r.zadd('queuenumber',ToBeSendTitle,i)
-                r.zincrby('queuenumber',lastnumber,ToBeSendTitle)
+                if ToBeSendTitle not in scorequeue:
+                    r.zadd('queuenumber',ToBeSendTitle,i)
+                    r.zincrby('queuenumber',ToBeSendTitle,lastnumber+1)
                 r.hset('imgkey',ToBeSendTitle,ToBeSendImage)
         except:
             for i in range(len(KeyList)):
                 ToBeSendTitle=r.hget('queue',KeyList[i])
                 ToBeSendImage=r.hget('img',KeyList[i])
                 r.zadd('queuenumber',ToBeSendTitle,i)
-                r.zincrby('queuenumber',1,ToBeSendTitle)
+                r.zincrby('queuenumber',ToBeSendTitle,1)
                 r.hset('imgkey',ToBeSendTitle,ToBeSendImage)
     def PostItem(self):
         Keys=r.hkeys('queue')
         ReadyToPostItem=r.hget('queue',Keys[0])
         UnPushed=ForbiddenItemPushed(ReadyToPostItem)
-        print UnPushed
         if UnPushed is not False:
             Image='imgcache/'+r.hget('img',EDITEDPREFIX+ReadyToPostItem)
             post(status=ReadyToPostItem,pic=Image)
-            r.zrem('queuenumber',ReadyToPostItem)
             r.hdel('imgkey',EDITEDPREFIX+ReadyToPostItem)
             r.hdel('queue',EDITEDPREFIX+ReadyToPostItem)
+            r.zrem('queuenumber',ReadyToPostItem)
+            scorequeue=r.zrange('queuenumber',0,-1)
+            for i in range(len(scorequeue)):
+                score=r.zscore('queuenumber',scorequeue[i])
+                r.zadd('queuenumber',scorequeue[i],score-1)
             r.hset('queue',PUSHEDPREFIX+ReadyToPostItem,ReadyToPostItem)
         else:
             pass
@@ -172,4 +176,3 @@ update=MU_UpdateData()
 PrepareLogin()
 update.GetItemToSend()
 update.PostItem()
-
