@@ -57,7 +57,7 @@ docs/_build/
 target/
 
 # Redis
-*.edb
+*.rdb
 
 #images
 imgcache/
