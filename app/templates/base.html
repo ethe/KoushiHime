@@ -1,0 +1,24 @@
+{% extends "bootstrap/base.html" %}
+{% block navbar %}
+    <nav class="navbar navbar-default navbar-fixed-top">
+        <div class='container-fluid'>
+            <div class='navbar-header'>
+                <button type='button' class='navbar-toggle collapsed' data-toggle='collapse' data-target='#MU_Navbar' aria-expanded='flase'>
+                    <span class='sr-only'>Toggle navigation</span>
+                    <span class='icon-bar'></span>
+                    <span class='icon-bar'></span>
+                    <span class='icon-bar'></span>
+                </button>
+                <a class='navbar-brand' href='/'>萌娘百科的更新姬</a>
+            </div>
+            <div class='navbar-collapse collapse'>
+                <ul class='nav navbar-nav'>
+                    <li><a href='/'>主页</a></li>
+                    <li><a href='/'>留言板</a></li>
+                    {% if current_user.is_authenticated() %}
+                        <li><a href={{ url_for('auth.logout') }}></li>
+                    {% else %}
+                        <li><a href={{ url_for('auth.login') }}></li>
+                    {% endif %}
+
+{% endblock %}

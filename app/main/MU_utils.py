@@ -15,14 +15,14 @@ import urllib
 import urllib2
 from collections import OrderedDict
 sys.setdefaultencoding('utf-8')
-os.chdir(os.path.dirname(sys.argv[0]))
+os.chdir(os.path.dirname(__file__))
 r = redis.Redis(host="localhost", port=6379, db=0)
 def unique_str():
     return str(uuid.uuid1())
 def loggingInit(logname):
-    isExists = os.path.exists('log')
+    isExists = os.path.exists('../log')
     if not isExists:
-        os.mkdir('log')
+        os.mkdir('../log')
     LogExists = os.path.exists(logname)
     if not LogExists:
         f = open(logname, 'w')

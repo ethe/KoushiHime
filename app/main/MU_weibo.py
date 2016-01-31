@@ -6,26 +6,21 @@ import os
 import urllib,urllib2,cookielib
 import re,json
 import base64,hashlib,rsa,binascii
-os.chdir(os.path.dirname(sys.argv[0]))
+os.chdir(os.path.dirname(__file__))
 sys.setdefaultencoding('utf-8')
 from weibo import APIClient
 from MU_utils import r,_decode_dict
-APP_KEY='563928974'
-APP_SECRET=''
+from MU_conf import MU_MainConfig
+
 CALLBACK_URL='http://up.acggirl.moe'
 REFERER='https://api.weibo.com/oauth2/authorize?redirect_uri=http%3A//up.acggirl.moe&response_type=code&client_id=563928974'
 user_agent = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/47.0.2526.73 Safari/537.36'
 headers = {'User-Agent':user_agent}
 authheaders={'User-Agent':user_agent,'host':'api.weibo.com','method':'POST','content-type':'application/x-www-form-urlencoded','origin':'https://api.weibo.com'}
-Code=''
-client=APIClient(app_key=APP_KEY,app_secret=APP_SECRET,redirect_uri=CALLBACK_URL)
+client=APIClient(app_key=MU_MainConfig.APP_KEY,app_secret=MU_MainConfig.APP_SECRET,redirect_uri=CALLBACK_URL)
 
-        
-def GetCode(code):
-    Code=code
 def PrepareToken():
-    Code='7581b56419b5ea52abc39c0f282716e6'
-    read=client.request_access_token(Code)
+    read=client.request_access_token(MU_MainConfig.Code)
     access_token=read.access_token
     expires_in=read.expires_in
     r.set('access_token',access_token)

@@ -4,9 +4,6 @@ app = Flask(__name__)
 
 @app.route('/')
 def index():
-    code=request.args.get('code')
-    GetCode(code)
-    return code
-
+    
 if __name__=='__main__':
     app.run(debug=True)

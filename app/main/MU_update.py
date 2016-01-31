@@ -11,17 +11,14 @@ from bs4 import BeautifulSoup
 import logging,logging.handlers
 import traceback
 import weibo
+import pdb
 from collections import OrderedDict
 sys.setdefaultencoding('utf-8')
-#from MU_conf import MUconf
+from MU_conf import MU_MainConfig
 from MU_weibo import post,PrepareLogin
 from MU_utils import r,unique_str,loggingInit,for_cat,for_rc,_decode_dict
-os.chdir(os.path.dirname(sys.argv[0]))
-PUSHEDPREFIX="PUSHED-"
-EDITEDPREFIX='EDITED-'
-EXPIRETIME='72*3600'
-THREEDAYS=259200
-log=loggingInit('log/update.log')
+os.chdir(os.path.dirname(__file__))
+log=loggingInit('../log/update.log')
 def GetCategory(title):
     apiurl="http://zh.moegirl.org/api.php"
     parmas = urllib.urlencode({'format':'json','action':'query','prop':'categories','titles':title})
@@ -51,19 +48,19 @@ def GetImage(title):
                 continue
     except:
         return None
-    isExists=os.path.exists('imgcache')
+    isExists=os.path.exists('../imgcache')
     if not isExists:
-        os.makedirs('imgcache')
+        os.makedirs('../imgcache')
     name=unique_str()
     TheImageIsReadyToPush=False
     if locals().has_key("img"):
         try:
-            with open('imgcache/'+name,'wb') as f:
+            with open('../imgcache/'+name,'wb') as f:
                 con=urllib.urlopen("http:"+img)
                 f.write(con.read())
                 f.flush()
                 TheImageIsReadyToPush=True
-                r.hset('img',EDITEDPREFIX+title,name)
+                r.hset('img',MU_MainConfig.EDITEDPREFIX+title,name)
         except BaseException, e:
                 log.debug(e)
                 return None
@@ -81,10 +78,16 @@ def ForbiddenItemsFilter(item):
     
 def ForbiddenItemPushed(title):
     for key in r.hkeys('queue'):
-        if key==PUSHEDPREFIX+title:
+        if key==MU_MainConfig.PUSHEDPREFIX+title:
             return False
             break
     return True
+def BreakInQueue(title):            
+    scorequeue=r.zrange('queuenumber',0,-1)
+    for i in range(len(scorequeue)):
+        score=r.zscore('queuenumber',scorequeue[i])
+        r.zadd('queuenumber',scorequeue[i],score+1)
+    r.zadd('queuenumber',title,1)
 
 class MU_UpdateData(object):
     def __init__(self):
@@ -111,7 +114,7 @@ class MU_UpdateData(object):
         for item in self.cache:
             flag=GetImage(item)
             if flag==True:
-                itemkey=EDITEDPREFIX+item
+                itemkey=MU_MainConfig.EDITEDPREFIX+item
                 r.hset('queue',itemkey,item)
                 timenow=time.time()
                 r.zadd('expire',itemkey,timenow)
@@ -119,7 +122,7 @@ class MU_UpdateData(object):
                 pass
     def RemoveExpiredItems(self):
         timenow=time.time()
-        ThreeDaysAgo=time.time()-THREEDAYS
+        ThreeDaysAgo=time.time()-MU_MainConfig.THREEDAYS
         zset=r.zrangebyscore('expire',ThreeDaysAgo,timenow)
         hkeys=r.hkeys('queue')
         setofzset=set(zset)
@@ -130,7 +133,7 @@ class MU_UpdateData(object):
                 r.zrem('expire',hkeys[i])
                 r.hdel('queue',hkeys[i])
                 name=r.hget('img',hkeys[i])
-                os.remove('imgcache/'+name)
+                os.remove('../imgcache/'+name)
                 r.hdel('img',r.hget('queue',hkeys[i]))
 
     def GetItemToSend(self):
@@ -151,22 +154,23 @@ class MU_UpdateData(object):
                 ToBeSendImage=r.hget('img',KeyList[i])
                 r.zadd('queuenumber',ToBeSendTitle,i)
                 r.zincrby('queuenumber',ToBeSendTitle,1)
-                r.hset('imgkey',ToBeSendTitle,ToBeSendImage)
+                r.hset('imgkey',ToBeSendTitle,ToBeSendImage)        
     def PostItem(self):
-        Keys=r.hkeys('queue')
-        ReadyToPostItem=r.hget('queue',Keys[0])
+        Keys=r.zrange('queuenumber',0,-1)
+        ReadyToPostItem=Keys[0]
         UnPushed=ForbiddenItemPushed(ReadyToPostItem)
         if UnPushed is not False:
-            Image='imgcache/'+r.hget('img',EDITEDPREFIX+ReadyToPostItem)
+            Image='../imgcache/'+r.hget('img',MU_MainConfig.EDITEDPREFIX+ReadyToPostItem)
             post(status=ReadyToPostItem,pic=Image)
-            r.hdel('imgkey',EDITEDPREFIX+ReadyToPostItem)
-            r.hdel('queue',EDITEDPREFIX+ReadyToPostItem)
+            r.hdel('imgkey',MU_MainConfig.EDITEDPREFIX+ReadyToPostItem)
+            r.hdel('queue',MU_MainConfig.EDITEDPREFIX+ReadyToPostItem)
             r.zrem('queuenumber',ReadyToPostItem)
             scorequeue=r.zrange('queuenumber',0,-1)
             for i in range(len(scorequeue)):
                 score=r.zscore('queuenumber',scorequeue[i])
                 r.zadd('queuenumber',scorequeue[i],score-1)
-            r.hset('queue',PUSHEDPREFIX+ReadyToPostItem,ReadyToPostItem)
+
+            r.hset('queue',MU_MainConfig.PUSHEDPREFIX+ReadyToPostItem,ReadyToPostItem)
         else:
             pass
 item='123'
