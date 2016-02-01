@@ -1,7 +1,5 @@
 import unittest
-import sys
-sys.path.append('..')
-from app.model import User
+from .. app.model import User
 class TestPasswordHashCase(unittest.TestCase):
     def setUp(self):
         self.u=User()
