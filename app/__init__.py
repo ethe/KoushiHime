@@ -8,16 +8,16 @@ csrf = CsrfProtect()
 import redis
 import sys
 sys.path.append('main')
-from main.MU_conf import MU_FlaskConfig
 __version__='0.0.1'
 bootstrap=Bootstrap()
 mail=Mail()
 moment=Moment()
+r = redis.Redis(host="localhost", port=6379, db=0)
 login_manager=LoginManager()
 login_manager.session_protection='strong'
 login_manager.login_view='auth.login'
-r = redis.Redis(host="localhost", port=6379, db=0)
-def create_app():
+from main.MU_conf import MU_FlaskConfig
+def create_app():  
     app=Flask(__name__)
     app.config.from_object(MU_FlaskConfig)
     MU_FlaskConfig.init_app(app)

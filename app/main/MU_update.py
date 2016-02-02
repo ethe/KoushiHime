@@ -88,6 +88,7 @@ def BreakInQueue(title):
         score=r.zscore('queuenumber',scorequeue[i])
         r.zadd('queuenumber',scorequeue[i],score+1)
     r.zadd('queuenumber',title,1)
+    return True
 
 class MU_UpdateData(object):
     def __init__(self):

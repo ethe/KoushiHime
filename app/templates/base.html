@@ -17,11 +17,27 @@
                 <ul class='nav navbar-nav'>
                     <li><a href='/'>主页</a></li>
                     <li><a href='/'>留言板</a></li>
-                    
+                </ul>
+                <ul class='nav navbar-nav navbar-right'>
+                    {% if current_user.is_authenticated %}
+                    <li><a href='{{ url_for('auth.logout') }}'>登出</a></li>
+                    {% else %}
+                    <li><a href='{{ url_for('auth.login') }}'>登入</a></li>
+                    {% endif %}
                 </ul>
             </div>
         </div>
     </nav>
+<footer class="footer navbar-fixed-bottom " id='footer'>
+    <div class="container">
+        <div class='text-center'>
+            <small>本站使用<a href='http://flask.pocoo.org/'>python-flask</a>作为后端</small><br />
+            <small>感谢twitter能够提供<a href='http://www.getbootstrap.com/'>bootstrap</a>，使前端开发不再痛苦
+            部分图标由<a href='http://glyphicons.com/'>glyphicons</a>提供</small><br />
+            <small>萌娘百科© 2015 authored by bbrabbit</small>
+        </div>
+    </div>
+</footer>
 {% endblock %}
 {% block content %}
 {% block flashmessages %}
@@ -35,3 +51,4 @@
 <div class='container'>
 {% block  mainbody %}{% endblock %}
 {% endblock %}
+
