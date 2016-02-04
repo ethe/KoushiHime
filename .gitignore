@@ -58,6 +58,7 @@ target/
 
 # Redis
 *.rdb
+*.aof
 
 #images
 imgcache/

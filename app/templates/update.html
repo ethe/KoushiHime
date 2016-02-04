@@ -8,7 +8,7 @@ function refreshmodalsuccess(){
     document.getElementById('ModalContent').innerHTML=success
 }
 function refreshmodalerror(){
-    var error="<div class='text-center'><span class='glyphicon glyphicon-remove' aria-hidden='true' font-size='50px'></span></div><p class='lead text-center'>错误－请检查本日剩余条目推送次数或条目不符合推送标准</p>"
+    var error="<div class='text-center'><span class='glyphicon glyphicon-remove' aria-hidden='true' font-size='50px'></span></div><p class='lead text-center'>错误-请检查本日剩余条目推送次数</p>"
     document.getElementById('ModalContent').innerHTML=error
 }
 var csrftoken = "{{ csrf_token() }}"
@@ -54,4 +54,10 @@ function btnclick(id){
                         <p>正在处理推送，请稍后</p>
                     </div>
             </div>
+        </div>
+    </div>
+</div>
+<div class='col-md-3 col-md-offset-9'>
+    <p style='lead'>{{ moment(current_time).format('LLL') }}</p>
+</div>
 {% endblock %}
