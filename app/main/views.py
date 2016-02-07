@@ -14,14 +14,19 @@ def update():
     p=Page()
     title=[]
     title=p.GetTitles()
-    pdb.settrace()
-    if request.method == 'POST':
-        jsondata=request.get_json()
-        print jsondata
+    jsondata=request.get_json()
+    if request.method == 'POST' and jsondata['action'] == 'post':
         title=jsondata['title']
         flag=p.Break(title)
         if flag==True:
             pass
         else: 
+            abort(403)
+    if request.method == 'POST' and jsondata['action'] == 'del':
+        title=jsondata['title']
+        flag=p.Delete(title)
+        if flag==True:
+            pass
+        else:
             abort(403)
     return render_template('update.html',title=title,current_time=datetime.utcnow())

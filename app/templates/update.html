@@ -1,46 +1,47 @@
 {% extends 'base.html' %}
-{% block title %}萌娘百科的更新姬-推送状态{% endblock %}
-{% block scripts %}
-{{ super() }}
-<script type='text/javascript'>
-function refreshmodalsuccess(){
-    var success="<div class='text-center'><span class='glyphicon glyphicon-ok' aria-hidden='true' font-size='50px'></span></div><p class='lead text-center'>操作成功</p><br /><div class='text-center'><small>条目将在下一次推送时被推送</small>"
-    document.getElementById('ModalContent').innerHTML=success
-}
-function refreshmodalerror(){
-    var error="<div class='text-center'><span class='glyphicon glyphicon-remove' aria-hidden='true' font-size='50px'></span></div><p class='lead text-center'>错误-请检查本日剩余条目推送次数</p>"
-    document.getElementById('ModalContent').innerHTML=error
-}
-var csrftoken = "{{ csrf_token() }}"
-function btnclick(id){
-    $.ajaxSetup({
-        beforeSend: function(xhr, settings) {
-            if (!/^(GET|HEAD|OPTIONS|TRACE)$/i.test(settings.type)) {
-                xhr.setRequestHeader("X-CSRFToken", csrftoken)
-            }
-            }
-        })
-    var PostVal={"title":id}
-    $.ajax({type:'POST',contentType:'application/json',url:'update',data:JSON.stringify(PostVal),success:refreshmodalsuccess,error:refreshmodalerror})
-}
- $(function() { $('#loadingModal').on('hide.bs.modal', function() {location.reload()})})
-</script>
+{% block title %}萌娘百科的更新姬-推送状态{% endblock %} 
+{% block head %}
+{{super()}}
 {% endblock %}
+{% block scripts %} 
+{{ super() }}
+<script type="text/javascript" src="/static/refresh.js" ></script>
+<script>
+function sendtoken(callback,id){
+    var csrftoken = "{{ csrf_token() }}"
+    callback(id,csrftoken)
+}
+</script>
+{% endblock %} 
 {% block mainbody %}
-<div class='col-md-8'>
-    <table class='table table-hover'>
-        <tr>
-            <th class=col-md-1>序号</th>
-            <th class='col-md-8'>词条名</th>
-            <th>优先推送</th>
-        </tr>
-        {% for title in title %}
-        <tr>
-            <th>{{ loop.index }}</th>
-            <th><p>{{ title }}</p></th>
-            <th> <button class='btn btn-default' id='{{title}}' value='push' data-toggle='modal' data-target='#loadingModal' onclick='btnclick(this.id)'>推送</button></th>
-        </tr>
-        {% endfor %}
+<div class='row'>
+    <div class='col-md-7'>
+        <table class='table table-hover'>
+            <tr>
+                <th class=col-md-1>序号</th>
+                <th class='col-md-7'>词条名</th>
+                <th>优先推送</th>
+                <th>删除</th>
+            </tr>
+            {% for title in title %}
+            <tr>
+                <th>{{ loop.index }}</th>
+                <th>
+                    <p>{{ title }}</p>
+                </th>
+                <th>
+                    <button class='btn btn-default' id='{{title}}' value='push' data-toggle='modal' data-target='#loadingModal' onclick='sendtoken(pushbtnclick,this.id)'>推送</button>
+                </th>
+                <th>
+                    <button class='btn btn-default' id='{{title}}' value='delete' data-toggle='modal' data-target='#loadingModal' onclick='sendtoken(delbtnclick,this.id)'>删除</button>
+                </th>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+    <div class='col-md-3 col-md-offset-1'>
+        <p style='lead'>{{ moment(current_time).format('LLL') }}</p>
+    </div>
 </div>
 <div class='modal fade' id='loadingModal' tabindex='-1' role='dialog' aria-labelledby='loadingModalLabel'>
     <div class='modal-dialog' role='alertdialog'>
@@ -50,14 +51,11 @@ function btnclick(id){
                 <h4 class='modal-title' id='loadingModalLabel'>处理中</h4>
             </div>
             <div class='modal-body'>
-                    <div class='text-center' id='ModalContent'>
-                        <p>正在处理推送，请稍后</p>
-                    </div>
+                <div class='text-center' id='ModalContent'>
+                    <p>正在处理推送，请稍后</p>
+                </div>
             </div>
         </div>
     </div>
-</div>
-<div class='col-md-3 col-md-offset-9'>
-    <p style='lead'>{{ moment(current_time).format('LLL') }}</p>
 </div>
 {% endblock %}

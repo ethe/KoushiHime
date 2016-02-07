@@ -1,7 +1,9 @@
 from . import r,login_manager
 from werkzeug.security import generate_password_hash,check_password_hash
 from flask.ext.login import UserMixin
-from main.MU_update import BreakInQueue
+from main.MU_update import BreakInQueue,DeletePage
+from main.MU_conf import MU_MainConfig
+import os
 class User(UserMixin,object):
     def AddUser(self,username,password,role,email):
         self.password=password
@@ -33,4 +35,6 @@ class Page(object):
     def Break(self,title):
         flag=BreakInQueue(title)
         return flag
-
+    def Delete(self,title):
+        flag=DeletePage(title)
+        return flag

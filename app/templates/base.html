@@ -33,16 +33,6 @@
             </div>
         </div>
     </nav>
-<footer class="footer navbar-fixed-bottom " id='footer'>
-    <div class="container">
-        <div class='text-center'>
-            <small>本站使用<a href='http://flask.pocoo.org/'>python-flask</a>作为后端</small><br />
-            <small>感谢twitter能够提供<a href='http://www.getbootstrap.com/'>bootstrap</a>，使前端开发不再痛苦
-            部分图标由<a href='http://glyphicons.com/'>glyphicons</a>提供</small><br />
-            <small>萌娘百科© 2015 authored by bbrabbit</small>
-        </div>
-    </div>
-</footer>
 {% endblock %}
 {% block content %}
 {% block flashmessages %}
@@ -55,5 +45,17 @@
 {% endblock %}
 <div class='container'>
 {% block  mainbody %}{% endblock %}
+{% block footer %}
+<footer class="footer" id='footer'>
+    <div class="container">
+        <div class='text-center'>
+            <small>本站使用<a href='http://flask.pocoo.org/'>python-flask</a>作为后端</small><br />
+            <small>感谢twitter能够提供<a href='http://www.getbootstrap.com/'>bootstrap</a>，使前端开发不再痛苦
+            部分图标由<a href='http://glyphicons.com/'>glyphicons</a>提供</small><br />
+            <small>萌娘百科© 2015 authored by bbrabbit</small>
+        </div>
+    </div>
+</footer>
+{%endblock%}
 {% endblock %}
 
