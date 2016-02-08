@@ -1,9 +1,16 @@
+# -*- coding: utf-8 -*-
 from . import r,login_manager
 from werkzeug.security import generate_password_hash,check_password_hash
 from flask.ext.login import UserMixin
-from main.MU_update import BreakInQueue,DeletePage
+from main.MU_update import BreakInQueue,DeletePage,GetImage
 from main.MU_conf import MU_MainConfig
+import time
+import datetime
 import os
+import sys
+reload(sys)
+import pdb
+sys.setdefaultencoding('utf8')
 class User(UserMixin,object):
     def AddUser(self,username,password,role,email):
         self.password=password
@@ -37,4 +44,20 @@ class Page(object):
         return flag
     def Delete(self,title):
         flag=DeletePage(title)
-        return flag
+        return flag          
+    def Add(self,title):
+        flag=GetImage(title.encode('utf8'))
+        if flag==True:
+            timenow=time.time()
+            r.zadd('expire',MU_MainConfig.EDITEDPREFIX+title,timenow)
+            r.hset('queue',MU_MainConfig.EDITEDPREFIX+title,title)
+            r.zadd('queuenumber',title,0)
+            scorequeue=r.zrange('queuenumber',0,-1)
+            for i in range(len(scorequeue)):
+                score=r.zscore('queuenumber',scorequeue[i])
+                r.zadd('queuenumber',scorequeue[i],score+1)
+            img=r.hget('img',MU_MainConfig.EDITEDPREFIX+title)
+            r.hset('imgkey',title,img)
+            return True
+        else:
+            return False

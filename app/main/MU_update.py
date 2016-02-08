@@ -89,7 +89,6 @@ def ForbiddenItemGet(title):
             break
     return True
 def BreakInQueue(title): 
-    pdb.set_trace()
     score=r.zscore('queuenumber',title)           
     scorequeue=r.zrange('queuenumber',0,int(score)-1)
     r.zadd('queuenumber',title,0)
@@ -188,9 +187,9 @@ class MU_UpdateData(object):
         else:
             pass
 item='123'
-update=MU_UpdateData()
-update.SaveRecentChanges()
+#update=MU_UpdateData()
+#update.SaveRecentChanges()
 #update.RemoveExpiredItems()
 #PrepareLogin()
-update.GetItemToSend()
+#update.GetItemToSend()
 #update.PostItem()

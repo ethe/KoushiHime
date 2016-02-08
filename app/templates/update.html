@@ -1,8 +1,5 @@
 {% extends 'base.html' %}
 {% block title %}萌娘百科的更新姬-推送状态{% endblock %} 
-{% block head %}
-{{super()}}
-{% endblock %}
 {% block scripts %} 
 {{ super() }}
 <script type="text/javascript" src="/static/refresh.js" ></script>
@@ -33,7 +30,7 @@ function sendtoken(callback,id){
                     <button class='btn btn-default' id='{{title}}' value='push' data-toggle='modal' data-target='#loadingModal' onclick='sendtoken(pushbtnclick,this.id)'>推送</button>
                 </th>
                 <th>
-                    <button class='btn btn-default' id='{{title}}' value='delete' data-toggle='modal' data-target='#loadingModal' onclick='sendtoken(delbtnclick,this.id)'>删除</button>
+                    <button class='btn btn-default' id='{{title}}' value='delete' data-toggle='modal' data-target='#loadingModal'  onclick='sendtoken(delbtnclick,this.id)'>删除</button>
                 </th>
             </tr>
             {% endfor %}

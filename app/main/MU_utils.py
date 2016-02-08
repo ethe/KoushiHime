@@ -82,10 +82,24 @@ def for_rc():
     res_data=urllib2.urlopen(req)
     ori=res_data.read()
     rcc=json.loads(ori,object_hook=_decode_dict)
-    OrderedDict(rcc)
+    rcc=OrderedDict(rcc)
     key = rcc['query'].keys()[0]
     lists = rcc['query'][key]
         #print type(value)
         #for i in range(len(value)):
             #rc.append(value[i]['title'])
     return lists
+def GetNamespace(title):
+    apiurl='http://zh.moegirl.org/api.php'
+    parmas=urllib.urlencode({'format':'json','action':'query','prop':'pageprops','titles':title})
+    req=urllib2.Request(url=apiurl,data=parmas)
+    res_data=urllib2.urlopen(req)
+    ori=res_data.read()
+    jsondata=json.loads(ori,object_hook=_decode_dict)
+    ojd=OrderedDict(jsondata)
+    if jsondata['query'].has_key('normalized') is False:
+        key=ojd['query']['pages'].keys()[0]
+        ns=ojd['query']['pages'][key]['ns']
+        return ns
+    else:
+        return None

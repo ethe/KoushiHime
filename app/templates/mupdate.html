@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+{% block title %}萌娘百科的更新姬-手动推送{% endblock %}
+{% block scripts %} 
+{{ super() }}
+<script type="text/javascript" src="/static/refresh.js" ></script>
+<script>
+function sendtoken(callback,id){
+    var csrftoken = "{{ csrf_token() }}"
+    callback(id,csrftoken)
+}
+</script>
+{% endblock %} 
+{% block mainbody %}
+<div class='col-md-8 col-md-offset-4'>
+        <p class='lead'>请在此处输入要推送的条目名</p>
+</div>
+<div class='col-md-4 col-md-offset-4'>
+    <form method='POST'>
+    {{ form.hidden_tag() }}
+    {{ form.pushtitle.label }}{{ form.pushtitle(class='form-control',id=pushtitle,placeholder='条目名') }}
+    <br />
+    {{form.submit(class='btn btn-primary')}}  
+    </form>
+</div>
+</div>
+{% endblock %}
