@@ -1,9 +1,11 @@
 # -*- coding: utf-8 -*-
 from . import r,login_manager
+from flask import g
 from werkzeug.security import generate_password_hash,check_password_hash
 from flask.ext.login import UserMixin
-from main.MU_update import BreakInQueue,DeletePage,GetImage
+from main.MU_update import DeletePage,GetImage
 from main.MU_conf import MU_MainConfig
+import datetime
 import time
 import datetime
 import os
@@ -18,13 +20,61 @@ class User(UserMixin,object):
         r.hset('pwd',username,self.password_hash)
         r.hset('role',username,role)
         r.hset('email',username,email)
+        r.hset('aboutme',username,'')
+        if role == '管理员':
+            r.hset('pushtime',username,10)
+            r.hset('deltime',username,9999)
+        else:
+            r.hset('pushtime',username,1)
+            r.hset('deltime',username,1)
     def RemUser(self,username):
+        r.lrem('users',username)
         r.hdel('pwd',username)
         r.hdel('role',username)
         r.hdel('email',username)
+        r.hdel('pushtime',username)
+        r.hdel('delname',username)
+        r.hdel('aboutme',username)
+    def ChangePassword(self,username,password):
+        self.password=password
+        r.hset('pwd',username,self.password_hash)
+    def ChangeProfile(self,username,email,aboutme):
+        r.hset('email',username,email)
+        r.hset('aboutme',username,aboutme)
+    def GetPushtime(self,username):
+        pushtime=r.hget('pushtime',username)
+        return pushtime
+    def GetDeltime(self,username):
+        deltime=r.hget('deltime',username)
+        return deltime
     def ChangeRole(self,username,role):
         r.hset('role',username,role)
         return username
+    def CheckRole(self,username):
+        userrole=r.hget('role',username)
+        return userrole
+    def CheckUser(self,username):
+        userlist=r.lrange('users',0,-1)
+        if username in userlist:
+            return True
+        else:
+            return False
+    def GetUserList(self):
+        userlist=r.lrange('users',0,-1)
+        return userlist
+    def GetUserInfo(self,username):
+        email=r.hget('email',username)
+        role=r.hget('role',username)
+        aboutme=r.hget('aboutme',username)
+        setattr(self,'email',email)
+        setattr(self,'role',role)
+        setattr(self,'aboutme',aboutme)
+    def is_administrator(self,username):
+        role=r.hget('role',username)
+        if role == '管理员':
+            return True
+        else:
+            return False
     @property
     def password(self):
         raise AttributeError('password is not a readable attribute')
@@ -40,11 +90,31 @@ class Page(object):
         pushinglist=r.zrange('queuenumber',0,-1)
         return pushinglist
     def Break(self,title):
-        flag=BreakInQueue(title)
-        return flag
+        score=r.zscore('queuenumber',title)           
+        scorequeue=r.zrange('queuenumber',0,int(score)-1)
+        r.zadd('queuenumber',title,0)
+        pushtime=r.hget('pushtime',g.user)
+        r.hset('pushtime',g.user,int(pushtime)-1)
+        for i in range(len(scorequeue)):
+            score=r.zscore('queuenumber',scorequeue[i])
+            r.zadd('queuenumber',scorequeue[i],score+1)
+        return True
     def Delete(self,title):
-        flag=DeletePage(title)
-        return flag          
+        r.zrem('expire',MU_MainConfig.EDITEDPREFIX+title)
+        r.hdel('queue',MU_MainConfig.EDITEDPREFIX+title)
+        name=r.hget('img',MU_MainConfig.EDITEDPREFIX+title)
+        os.remove('../imgcache/'+name)
+        r.hdel('img',MU_MainConfig.EDITEDPREFIX+title)
+        r.hdel('imgkey',title)
+        score=r.zscore('queuenumber',title)
+        r.zrem('queuenumber',title)
+        scorequeue=r.zrange('queuenumber',int(score)-1,-1)
+        deltime=r.hget('deltime',g.user)
+        r.hset('deltime',g.user,int(deltime)-1)
+        for i in range(len(scorequeue)):
+            score=r.zscore('queuenumber',scorequeue[i])
+            r.zadd('queuenumber',scorequeue[i],score-1)
+        return True        
     def Add(self,title):
         flag=GetImage(title.encode('utf8'))
         if flag==True:
@@ -53,6 +123,8 @@ class Page(object):
             r.hset('queue',MU_MainConfig.EDITEDPREFIX+title,title)
             r.zadd('queuenumber',title,0)
             scorequeue=r.zrange('queuenumber',0,-1)
+            pushtime=r.hget('pushtime',g.user)
+            r.hset('pushtime',g.user,int(pushtime)-1)
             for i in range(len(scorequeue)):
                 score=r.zscore('queuenumber',scorequeue[i])
                 r.zadd('queuenumber',scorequeue[i],score+1)

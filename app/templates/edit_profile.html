@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{%  block title %}萌娘百科更新姬-编辑资料{% endblock %}
+{% block mainbody %}
+<div class='col-md-4 col-md-offset-4'>
+        <form method='POST'>
+        {{ form.hidden_tag() }}
+    {{ form.password.label }}   {{form.password(class='form-control',id='password')}}
+    {{form.password2.label}}     {{form.password2(class='form-control',id='password2')}}
+    {{form.email.label}} {{form.email(class='form-control',id='email')}}
+    {{form.about_me.label}} {{form.about_me(class='form-control',id='about_me')}}
+    {{form.oripassword.label}}  {{form.oripassword(class='form-control',id='oripassword')}}
+    <br />
+    {{form.submit(class='btn btn-primary form-control')}}  
+    </form>  
+</div>
+{% endblock %}

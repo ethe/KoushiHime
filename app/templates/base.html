@@ -16,12 +16,19 @@
                 </button>
                 <a class='navbar-brand' href='/'>萌娘百科的更新姬</a>
             </div>
-            <div class='navbar-collapse collapse'>
+            <div class='navbar-collapse collapse' id='MU_Navbar'>
                 <ul class='nav navbar-nav'>
                     <li><a href='/'>主页</a></li>
+                    {% if current_user.is_authenticated %}
                     <li><a href='/update'>推送状态</a></li>
                     <li><a href='/mupdate'>手动推送</a></li>
-                    <li><a href='/'>留言板</a></li>
+                    <li><a href='/user/{{current_user.id}}'>个人资料</a></li>
+                    {% if current_user.is_administrator(current_user.id) %}
+                    <li><a href='/userlist'>用户列表</a></li>
+                    {% endif %}
+                    <li><a href='/log'>推送记录</a></li>
+                    {% endif %}
+                    <li><a href='/'>留言版(2.0预定)</a></li>
                 </ul>
                 <ul class='nav navbar-nav navbar-right'>
                     {% if current_user.is_authenticated %}
@@ -44,7 +51,7 @@
 {% endfor %}
 {% endblock %}
 <div class='container'>
-{% block  mainbody %}<p class='lead'>新年快乐！</p>{% endblock %}
+{% block  mainbody %}{% endblock %}
 {% block footer %}
 <footer class="footer" id='footer'>
     <div class="container">
@@ -52,7 +59,7 @@
             <small>本站使用<a href='http://flask.pocoo.org/'>python-flask</a>作为后端</small><br />
             <small>感谢twitter能够提供<a href='http://www.getbootstrap.com/'>bootstrap</a>，使前端开发不再痛苦
             部分图标由<a href='http://glyphicons.com/'>glyphicons</a>提供</small><br />
-            <small>萌娘百科© 2015 authored by bbrabbit</small>
+            <small>萌娘百科© 2015</small>
         </div>
     </div>
 </footer>

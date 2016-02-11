@@ -77,24 +77,14 @@ def ForbiddenItemsFilter(item):
     return True
     
 def ForbiddenItemPushed(title):
-    for key in r.hkeys('queue'):
-        if key==MU_MainConfig.PUSHEDPREFIX+title:
-            return False
-            break
+    keys = r.hkeys('queue')
+    if MU_MainConfig.PUSHEDPREFIX+title in keys:
+        return False
     return True
 def ForbiddenItemGet(title):
-    for key in r.hkeys('queue'):
-        if key == MU_MainConfig.EDITEDPREFIX+title:
-            return False
-            break
-    return True
-def BreakInQueue(title): 
-    score=r.zscore('queuenumber',title)           
-    scorequeue=r.zrange('queuenumber',0,int(score)-1)
-    r.zadd('queuenumber',title,0)
-    for i in range(len(scorequeue)):
-        score=r.zscore('queuenumber',scorequeue[i])
-        r.zadd('queuenumber',scorequeue[i],score+1)
+    keys = r.hkeys('queue')
+    if MU_MainConfig.EDITEDPREFIX+title in keys:
+        return False
     return True
 def DeletePage(title):
     r.zrem('expire',MU_MainConfig.EDITEDPREFIX+title)
@@ -105,7 +95,7 @@ def DeletePage(title):
     r.hdel('imgkey',title)
     score=r.zscore('queuenumber',title)
     r.zrem('queuenumber',title)
-    scorequeue=r.zrange('queuenumber',int(score),-1)
+    scorequeue=r.zrange('queuenumber',int(score)-1,-1)
     for i in range(len(scorequeue)):
         score=r.zscore('queuenumber',scorequeue[i])
         r.zadd('queuenumber',scorequeue[i],score-1)
@@ -157,23 +147,22 @@ class MU_UpdateData(object):
 
 
     def GetItemToSend(self):
-        KeyList=r.hkeys('queue')
         scorequeue=r.zrevrange('queuenumber',0,-1)
         try:
             lastnumber=r.zscore('queuenumber',scorequeue[0])
-            for i in range(len(KeyList)):
+            for i in range(len(self.cache)):
                 scorequeue=r.zrevrange('queuenumber',0,-1)
                 lastnumber=r.zscore('queuenumber',scorequeue[0])
-                ToBeSendTitle=r.hget('queue',KeyList[i])
-                ToBeSendImage=r.hget('img',KeyList[i])
+                ToBeSendTitle=r.hget('queue',MU_MainConfig.EDITEDPREFIX+self.cache[i])
+                ToBeSendImage=r.hget('img',MU_MainConfig.EDITEDPREFIX+self.cache[i])
                 if ToBeSendTitle not in scorequeue:
                     r.zadd('queuenumber',ToBeSendTitle,lastnumber)
                     r.zincrby('queuenumber',ToBeSendTitle,1)
                 r.hset('imgkey',ToBeSendTitle,ToBeSendImage)
         except:
-            for i in range(len(KeyList)):
-                ToBeSendTitle=r.hget('queue',KeyList[i])
-                ToBeSendImage=r.hget('img',KeyList[i])
+            for i in range(len(self.cache)):
+                ToBeSendTitle=r.hget('queue',MU_MainConfig.EDITEDPREFIX+self.cache[i])
+                ToBeSendImage=r.hget('img',MU_MainConfig.EDITEDPREFIX+self.cache[i])
                 r.zadd('queuenumber',ToBeSendTitle,i)
                 r.zincrby('queuenumber',ToBeSendTitle,1)
                 r.hset('imgkey',ToBeSendTitle,ToBeSendImage)        
@@ -187,7 +176,7 @@ class MU_UpdateData(object):
         else:
             pass
 item='123'
-#update=MU_UpdateData()
+update=MU_UpdateData()
 #update.SaveRecentChanges()
 #update.RemoveExpiredItems()
 #PrepareLogin()

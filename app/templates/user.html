@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+{% block title %}萌娘百科的更新姬-{{  username }}的个人资料{% endblock %}
+{% block mainbody %}
+<div class='page-header'>
+    <h1>个人资料</h1>
+</div>
+<div>
+    <p>用户名:{{ username }}</p>
+    <p>邮件地址:<a href='mailto:{{ u.email }}'>{{ u.email }}</a></p>
+    <p>职务:{{ u.role }}</p>
+    {% if u.aboutme %}
+    <p>个人签名:{{ u.aboutme }}</p>
+    {% endif %}
+</div>
+{% endblock %}
