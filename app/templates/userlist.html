@@ -1,28 +1,80 @@
-{% extends "base.html" %}
-{% block title %}萌娘百科的更新姬-用户列表{% endblock %}
-{% block mainbody %}
-<div class='col-md-offset-1'>
-    <table class='table table-hover'>
-        <tr>
-            <th class='col-md-1'>序号</th>
-            <th class='col-md-7'>用户名</th>
-            <th>编辑</th>
-            <th>删除</th>
-        </tr>
-        {% for username in userlist %}
-        <tr>
-            <th>{{ loop.index }}</th>
-            <th>
-                <p>{{ username }}</p>
-            </th>
-            <th>
-                <button class='btn btn-default' id='{{username}}' value='edit' onclick='sendtoken(pushbtnclick,this.id)'>编辑</button>
-            </th>
-            <th>
-                <button class='btn btn-default' id='{{username}}' value='delete' onclick='sendtoken(delbtnclick,this.id)'>删除</button>
-            </th>
+{% extends "base.html" %} 
+{% block title %}萌娘百科的更新姬-用户列表{% endblock %} 
+{% block scripts %} 
+{{ super() }}
+<script type="text/javascript" src="/static/refresh.js"></script>
+<script>
+function sendtoken(callback, id) {
+    var csrftoken = "{{ csrf_token() }}"
+    callback(id, csrftoken)
+}
+
+function saveid(id) {
+    window.username = id
+}
+
+function deleteuser(callback) {
+    var csrftoken = "{{ csrf_token() }}"
+    callback(window.username, csrftoken)
+}
+</script>
+{% endblock %} {% block mainbody %}
+<div class='row'>
+    <div class='col-md-7'>
+        <table class='table table-hover'>
+            <tr>
+                <th class='col-md-1'>序号</th>
+                <th class='col-md-7'>用户名</th>
+                <th>编辑</th>
+                <th>删除</th>
             </tr>
-        {% endfor %}
-    </table>
+            {% for username in userlist %}
+            <tr>
+                <th>{{ loop.index }}</th>
+                <th>
+                    <p>{{ username }}</p>
+                </th>
+                <th>
+                    <button class='btn btn-default' id='{{username}}' value='edit' onclick='sendtoken(editbtnclick,this.id)'>编辑</button>
+                </th>
+                <th>
+                    <button class='btn btn-default' id='{{username}}' value='delete' onclick='saveid(this.id)'>删除</button>
+                </th>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+    <div class='col-md-4 col-md-offset-1'>
+        <p class='lead'> 添加用户</p>
+        <form method='POST'>
+            {{ form.hidden_tag() }} 
+            {{ form.username.label }} {{ form.username(class='form-control',id='username',placeholder='用户名') }} 
+            {{ form.password.label }} {{ form.password(class='form-control',id='password',placeholder='密码') }} 
+            {{ form.password2.label }} {{ form.password2(class='form-control',id='password2',placeholder='确认密码') }} 
+            {{ form.email.label }} {{ form.email(class='form-control',id='email',placeholder='电子邮箱') }} 
+            {{ form.role.label }} {{form.role(class='form-control',id='role')}} 
+            <br />
+            {{form.submit(class='btn btn-primary form-control')}}
+        </form>
+    </div>
+</div>
+<div class='modal fade' id='deleteModal' tabindex='-1' role='dialog' aria-labelledby='deleteModalLabel'>
+    <div class='modal-dialog' role='alertdialog'>
+        <div class='modal-content'>
+            <div class='modal-header'>
+                <button type='button' class='close' data-dismiss='modal' aria-labal='close'><span aria-hidden='true'>&times;</span></button>
+                <h4 class='modal-title' id='loadingModalLabel'>处理中</h4>
+            </div>
+            <div class='modal-body'>
+                <div class='text-center' id='ModalContent'>
+                    <p>您确定要删除该用户吗？</p>
+                </div>
+            </div>
+            <div class='modal-footer'>
+                <button type='button' class='btn' data-dismiss='modal'>取消</button>
+                <button type='button' class='btn btn-primary' onclick='deleteuser(userdelbtnclick)'>删除</button>
+            </div>
+        </div>
+    </div>
 </div>
 {% endblock %}

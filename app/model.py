@@ -75,6 +75,12 @@ class User(UserMixin,object):
             return True
         else:
             return False
+    def is_blocked(self,username):
+        role=r.hget('role',username)
+        if role == '封禁':
+            return True
+        else:
+            return False
     @property
     def password(self):
         raise AttributeError('password is not a readable attribute')

@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 from datetime import datetime
-from flask import render_template,session,redirect,url_for,request,abort,flash,g
+from flask import render_template,session,redirect,url_for,request,abort,flash,g,jsonify
 from flask.ext.login import login_required,current_user
 from MU_utils import GetNamespace
 from .. model import User,Page
 from datetime import datetime
 import pdb
-from .form import PushForm,EditProfileForm
+from .form import PushForm,EditProfileForm,AddUserForm
 from . import main
 from MU_update import ForbiddenItemsFilter,ForbiddenItemPushed,ForbiddenItemGet
 from MU_utils import GetNamespace
@@ -17,6 +17,8 @@ sys.setdefaultencoding('utf8')
 @login_required
 def before_request():
     g.user = current_user.id
+    if current_user.is_blocked(g.user):
+        return render_template('block.html')
 @main.route('/')
 def index():
     return render_template('index.html')
@@ -81,9 +83,8 @@ def mupdate():
 @login_required
 def user(username):
     u=User()
-    role=u.CheckRole(current_user.id)
-    admin="管理员"
-    if current_user.id is username or role == admin.encode('utf8'):
+    adminflag=current_user.is_administrator(g.user)
+    if g.user is username or adminflag is True:
         flag=u.CheckUser(username)
         if flag is False:
             abort(404)
@@ -91,14 +92,25 @@ def user(username):
         return render_template('user.html',u=u,username=username)
     else:
         abort(403)
-@main.route('/userlist')
+@main.route('/userlist',methods=['GET','POST'])
 @login_required
 def userlist():
     u=User()
-    flag=current_user.is_administrator(current_user.id)
+    form=AddUserForm()
+    flag=current_user.is_administrator(g.user)
     if flag is True:
         userlist=u.GetUserList()
-        return render_template('userlist.html',userlist=userlist)
+        jsondata=request.get_json()
+        if request.method == 'POST' and jsondata['action']:
+            if jsondata['action'] == u'edit':
+                username=jsondata['username']
+                location=url_for('.admin_edit_profile',username=username)
+                return jsonify({"status":302,"location":location})
+            else:
+                username=jsondata['username']
+                u.RemUser(username)
+        else:
+            return render_template('userlist.html',userlist=userlist,form=form)
     else:
         abort(403)
 @main.route('/edit_profile',methods=['GET','POST'])
@@ -107,18 +119,44 @@ def edit_profile():
     form=EditProfileForm()
     u=User()
     if request.method == 'POST' and form.validate():
-        pwd=u.GetPassword(current_user.id)
+        pwd=u.GetPassword(g.user)
         if u.verify_password(form.oripassword.data):
             email=form.email.data
             aboutme=form.about_me.data
             if form.password.data is not u'':
-                u.ChangePassword(current_user.id,form.password.data)
-            u.ChangeProfile(current_user.id,email,aboutme)
+                u.ChangePassword(g.user,form.password.data)
+            u.ChangeProfile(g.user,email,aboutme)
             flash('成功更新资料')
-            return redirect(url_for('.user',username=current_user.id))
+            return redirect(url_for('.user',username=g.user))
         else:
             flash('原密码输入错误！')
-    u.GetUserInfo(current_user.id)
+    u.GetUserInfo(g.user)
     form.email.data=u.email
     form.about_me.data=u.aboutme
     return render_template('edit_profile.html',form=form,u=u)
+@main.route('/edit_profile/<username>',methods=['GET','POST'])
+@login_required
+def admin_edit_profile(username):
+    u=User()
+    form=EditProfileForm()
+    flag=current_user.is_administrator(g.user)
+    if request.method == 'POST' and form.validate():
+        if flag is True:
+            pwd=u.GetPassword(g.user)
+            if u.verify_password(form.oripassword.data):
+                email=form.email.data
+                aboutme=form.about_me.data
+                if form.password.data is not u'':
+                    u.ChangePassword(username,form.password.data)
+                u.ChangeProfile(username,email,aboutme)
+                flash('成功更新资料')
+                return redirect(url_for('.user',username=username))
+            else:
+                flash('管理员密码输入错误！')
+        else:
+            abort(403)
+    u.GetUserInfo(username)
+    form.email.data=u.email
+    form.about_me.data=u.aboutme
+    return render_template('edit_profile.html',form=form,u=u)
+
