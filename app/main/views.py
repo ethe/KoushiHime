@@ -6,7 +6,7 @@ from MU_utils import GetNamespace
 from .. model import User,Page
 from datetime import datetime
 import pdb
-from .form import PushForm,EditProfileForm,AddUserForm
+from .form import PushForm,EditProfileForm,AddUserForm,AdminEditProfileForm
 from . import main
 from MU_update import ForbiddenItemsFilter,ForbiddenItemPushed,ForbiddenItemGet
 from MU_utils import GetNamespace
@@ -111,9 +111,10 @@ def userlist():
                 u.RemUser(username)
                 return redirect('userlist')
         elif request.method == 'POST' and form.validate():
-            pdb.set_trace()
-            u.AddUser(form.username.data,form.password.data,form.role.data,form.email.data)
-            return redirect('userlist')
+            pwd=u.GetPassword(g.user)
+            if u.verify_password(form.oripassword.data):
+                u.AddUser(form.username.data,form.password.data,form.role.data,form.email.data)
+                return redirect('userlist')
         else:
             return render_template('userlist.html',userlist=userlist,form=form)
     else:
@@ -143,7 +144,7 @@ def edit_profile():
 @login_required
 def admin_edit_profile(username):
     u=User()
-    form=EditProfileForm()
+    form=AdminEditProfileForm()
     flag=current_user.is_administrator(g.user)
     if request.method == 'POST' and form.validate():
         if flag is True:
@@ -151,9 +152,10 @@ def admin_edit_profile(username):
             if u.verify_password(form.oripassword.data):
                 email=form.email.data
                 aboutme=form.about_me.data
+                role=form.role.data
                 if form.password.data is not u'':
                     u.ChangePassword(username,form.password.data)
-                u.ChangeProfile(username,email,aboutme)
+                u.AdminChangeProfile(username,email,role,aboutme)
                 flash('成功更新资料')
                 return redirect(url_for('.user',username=username))
             else:
@@ -163,5 +165,6 @@ def admin_edit_profile(username):
     u.GetUserInfo(username)
     form.email.data=u.email
     form.about_me.data=u.aboutme
-    return render_template('edit_profile.html',form=form,u=u)
+    form.role.data=u.role
+    return render_template('admin_edit_profile.html',form=form,u=u)
 
