@@ -101,7 +101,7 @@ def userlist():
     if flag is True:
         userlist=u.GetUserList()
         jsondata=request.get_json()
-        if request.method == 'POST' and jsondata['action']:
+        if request.method == 'POST' and jsondata:
             if jsondata['action'] == u'edit':
                 username=jsondata['username']
                 location=url_for('.admin_edit_profile',username=username)
@@ -109,6 +109,11 @@ def userlist():
             else:
                 username=jsondata['username']
                 u.RemUser(username)
+                return redirect('userlist')
+        elif request.method == 'POST' and form.validate():
+            pdb.set_trace()
+            u.AddUser(form.username.data,form.password.data,form.role.data,form.email.data)
+            return redirect('userlist')
         else:
             return render_template('userlist.html',userlist=userlist,form=form)
     else:

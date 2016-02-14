@@ -16,11 +16,11 @@ class EditProfileForm(Form):
     submit=SubmitField('提交')
 class AddUserForm(Form):
     username=StringField('用户名',[validators.Length(min=0,max=30),validators.Required()])
-    password=PasswordField('密码',[validators.Length(min=0,max=30),validators.EqualTo('password2',message='两次输入不一致'),validators.Required])
+    password=PasswordField('密码',[validators.Length(min=0,max=30),validators.EqualTo('password2',message='两次输入不一致'),validators.Required()])
     password2=PasswordField('确认密码',[validators.Length(min=0,max=30),validators.Required()])
     email=StringField('邮件地址',[validators.Length(min=0,max=30),validators.Required()])
     role=SelectField('职务')
     submit=SubmitField('提交')
     def __init__(self,*args,**kwargs):
         super(AddUserForm,self).__init__(*args,**kwargs)
-        self.role.choices=[('管理员','巡察姬')]
+        self.role.choices=[('guanli','管理员'),('xuncha','巡察姬')]

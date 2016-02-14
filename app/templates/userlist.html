@@ -38,7 +38,7 @@ function deleteuser(callback) {
                     <button class='btn btn-default' id='{{username}}' value='edit' onclick='sendtoken(editbtnclick,this.id)'>编辑</button>
                 </th>
                 <th>
-                    <button class='btn btn-default' id='{{username}}' value='delete' onclick='saveid(this.id)'>删除</button>
+                    <button class='btn btn-default' id='{{username}}' value='delete' onclick='saveid(this.id)' data-toggle='modal' data-target='#deleteModal'>删除</button>
                 </th>
             </tr>
             {% endfor %}
