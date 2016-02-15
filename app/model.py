@@ -5,9 +5,9 @@ from werkzeug.security import generate_password_hash,check_password_hash
 from flask.ext.login import UserMixin
 from main.MU_update import DeletePage,GetImage
 from main.MU_conf import MU_MainConfig
-import datetime
+from collections import OrderedDict
+from datetime import *
 import time
-import datetime
 import os
 import sys
 reload(sys)
@@ -41,6 +41,10 @@ class User(UserMixin,object):
     def ChangeProfile(self,username,email,aboutme):
         r.hset('email',username,email)
         r.hset('aboutme',username,aboutme)
+    def AdminChangeProfile(self,username,email,role,aboutme):
+        r.hset('email',username,email)
+        r.hset('aboutme',username,aboutme)
+        r.hset('role',username,role)
     def GetPushtime(self,username):
         pushtime=r.hget('pushtime',username)
         return pushtime
@@ -139,3 +143,25 @@ class Page(object):
             return True
         else:
             return False
+    def RecordUpdate(self,title,username,action):
+        timenow=time.time()
+        utctime=datetime.utcnow()
+        format="%Y年%m月%d日%H时%M分%S秒"
+        localtime=(utctime+timedelta(hours=8)).strftime(format)
+        r.hset('operateuser',title,username)
+        r.hset('operatetime',title,localtime)
+        r.hset('operateaction',title,action)
+        r.zadd('listtime',title,timenow)
+    def GetRecord(self):
+        keys=r.zrevrange('listtime',0,-1)
+        records={}
+        records=OrderedDict(records)
+        for i in range(len(keys)):
+            if i < 20:
+                operateuser=r.hget('operateuser',keys[i])
+                operatetime=r.hget('operatetime',keys[i])
+                operateaction=r.hget('operateaction',keys[i])
+                records[keys[i]]=[operateuser,operatetime,operateaction]
+            else:
+                break
+        return records

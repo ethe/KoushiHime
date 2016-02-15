@@ -97,7 +97,7 @@ def GetNamespace(title):
     ori=res_data.read()
     jsondata=json.loads(ori,object_hook=_decode_dict)
     ojd=OrderedDict(jsondata)
-    if jsondata['query'].has_key('normalized') is False:
+    if jsondata['query']['pages'].keys()[0] is not '-1':
         key=ojd['query']['pages'].keys()[0]
         ns=ojd['query']['pages'][key]['ns']
         return ns

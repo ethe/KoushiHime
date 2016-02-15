@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+{% block title %}萌娘百科的更新姬-推送记录{% endblock %}
+{%  block mainbody %}
+<div class='row'>
+    <div class='col-md-10 col-md-offset-1'>
+        <table class='table table-hover'>
+            <thead>
+                <tr>
+                    <th>序号</th>
+                    <th>操作条目</th>
+                    <th>用户名</th>
+                    <th>时间</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for title in records %}
+                <tr>
+                    <td>{{ loop.index + (page - 1) * per_page }}</td>
+                    <td>{{ title }}</td>
+                    <td><a href='{{ url_for('main.admin_edit_profile',username=records[title][0]) }}'>{{ records[title][0] }}</a></td>
+                    <td>{{ records[title][1] }}</td>
+                    <td>{{ records[title][2] }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {{ pagination.links }}
+    </div>
+</div>
+{% endblock %}}

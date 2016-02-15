@@ -2,10 +2,12 @@
 from datetime import datetime
 from flask import render_template,session,redirect,url_for,request,abort,flash,g,jsonify
 from flask.ext.login import login_required,current_user
+from flask.ext.paginate import Pagination
 from MU_utils import GetNamespace
 from .. model import User,Page
 from datetime import datetime
 import pdb
+from collections import OrderedDict
 from .form import PushForm,EditProfileForm,AddUserForm,AdminEditProfileForm
 from . import main
 from MU_update import ForbiddenItemsFilter,ForbiddenItemPushed,ForbiddenItemGet
@@ -37,18 +39,21 @@ def update():
             title=jsondata['title']
             flag=p.Break(title)
             if flag==True:
+                p.RecordUpdate(title,current_user.id,'推送')
                 pass
             else: 
                 abort(403)
         else:
             abort(403)
     if request.method == 'POST' and jsondata['action'] == 'del':
-        title=jsondata['title']
-        flag=p.Delete(title)
-        if flag==True:
-            pass
-        else:
-            abort(403)
+        if deltime is not '0':
+            title=jsondata['title']
+            flag=p.Delete(title)
+            if flag==True:
+                p.RecordUpdate(title,current_user.id,'删除')
+                pass
+            else:
+                abort(403)
     return render_template('update.html',title=title,current_time=datetime.utcnow(),pushtime=pushtime,deltime=deltime)
 @main.route('/mupdate',methods=['GET','POST'])
 @login_required
@@ -69,6 +74,7 @@ def mupdate():
                 if forbiddenflag is True and pushedflag is True and getflag is True:
                     flag=p.Add(title)
                     if flag is True:
+                        p.RecordUpdate(title,current_user.id,'手动推送')
                         flash('推送成功，本条目将在下一次推送时被推送')
                     else:
                         flash('错误-条目图片不符合要求')
@@ -167,4 +173,26 @@ def admin_edit_profile(username):
     form.about_me.data=u.aboutme
     form.role.data=u.role
     return render_template('admin_edit_profile.html',form=form,u=u)
-
+@main.route('/log')
+@login_required
+def log():
+    flag=current_user.is_administrator(g.user)
+    if flag is True:
+        p=Page()
+        record=p.GetRecord()
+        records={}
+        records=OrderedDict()
+        total=len(record)
+        page = request.args.get('page',1,type=int)
+        per_page=10
+        keys=record.keys()
+        offset=(page - 1) * per_page
+        for i in range(len(keys)):
+            if i < per_page and (offset+i) < len(keys):
+                records[keys[offset+i]]=record[keys[offset+i]]
+            else:
+                break
+        pagination=Pagination(css_framework='bootstrap3',link_size='sm',show_single_page=False,page=page,per_page=per_page,total=total,format_total=True,format_number=True)
+        return render_template('log.html',records=records,page=page,per_page=per_page,pagination=pagination)  
+    else:
+        abort(403)      

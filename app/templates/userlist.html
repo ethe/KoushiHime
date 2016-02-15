@@ -32,7 +32,7 @@ function deleteuser(callback) {
             <tr>
                 <th>{{ loop.index }}</th>
                 <th>
-                    <p>{{ username }}</p>
+                    <p><a href='{{ url_for('main.user',username=username) }}'>{{ username }} </a></p>
                 </th>
                 <th>
                     <button class='btn btn-default' id='{{username}}' value='edit' onclick='sendtoken(editbtnclick,this.id)'>编辑</button>
@@ -53,6 +53,7 @@ function deleteuser(callback) {
             {{ form.password2.label }} {{ form.password2(class='form-control',id='password2',placeholder='确认密码') }} 
             {{ form.email.label }} {{ form.email(class='form-control',id='email',placeholder='电子邮箱') }} 
             {{ form.role.label }} {{form.role(class='form-control',id='role')}} 
+            {{form.oripassword.label}}  {{form.oripassword(class='form-control',id='oripassword')}}
             <br />
             {{form.submit(class='btn btn-primary form-control')}}
         </form>
