@@ -2,6 +2,7 @@ import os
 from app import create_app
 from flask.ext.script import Manager,Shell
 from app.model import User
+from app.cron import start
 app=create_app()
 manager=Manager(app)
 def init_context():
@@ -16,3 +17,4 @@ def test():
     unittest.TextTestRunner(verbosity=2).run(tests)
 if __name__=='__main__':
     manager.run()
+    start()
