@@ -20,7 +20,7 @@ from MU_utils import r,unique_str,loggingInit,for_cat,for_rc,_decode_dict
 os.chdir(os.path.dirname(__file__))
 log=loggingInit('../log/update.log')
 def GetCategory(title):
-    apiurl="http://zh.moegirl.org/api.php"
+    apiurl="https://zh.moegirl.org/api.php"
     parmas = urllib.urlencode({'format':'json','action':'query','prop':'categories','titles':title})
     req=urllib2.Request(url=apiurl,data=parmas)
     res_data=urllib2.urlopen(req)
@@ -30,7 +30,7 @@ def GetCategory(title):
     return cat
 def GetImage(title):
     try:
-        url="http://zh.moegirl.org/"+title
+        url="https://zh.moegirl.org/"+title
         f=urllib.urlopen(url)
     except:
         return None
@@ -56,7 +56,7 @@ def GetImage(title):
     if locals().has_key("img"):
         try:
             with open('../imgcache/'+name,'wb') as f:
-                con=urllib.urlopen("http:"+img)
+                con=urllib.urlopen(img)
                 f.write(con.read())
                 f.flush()
                 TheImageIsReadyToPush=True

@@ -72,7 +72,7 @@ def for_cat(dic):
     return Categories
 def for_rc():
     #rc = []
-    apiurl="http://zh.moegirl.org/api.php"
+    apiurl="https://zh.moegirl.org/api.php"
     format="%Y%m%d%H%M%S"
     utc=datetime.datetime.utcnow()
     rcstart=(utc-datetime.timedelta(hours=1)).strftime(format)
@@ -90,7 +90,7 @@ def for_rc():
             #rc.append(value[i]['title'])
     return lists
 def GetNamespace(title):
-    apiurl='http://zh.moegirl.org/api.php'
+    apiurl='https://zh.moegirl.org/api.php'
     parmas=urllib.urlencode({'format':'json','action':'query','prop':'pageprops','titles':title})
     req=urllib2.Request(url=apiurl,data=parmas)
     res_data=urllib2.urlopen(req)

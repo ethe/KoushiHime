@@ -33,8 +33,7 @@ scheduler.add_job(push,'cron',id='late_afternoon_push',hour='18-21',minute='0,10
 scheduler.add_job(push,'cron',id='evening_push',hour='22-23',minute='0,15,30,45')
 scheduler.add_job(check_update,'cron',id='check_update',hour='0-23',minute='15,35,55')
 scheduler.add_job(resetpushanddeltime,'cron',id='reset',hour='0',minute='5')
-def start():
-    update=MU_UpdateData()
-    update.SaveRecentChanges()
-    update.GetItemToSend()
-    scheduler.start()
+update=MU_UpdateData()
+update.SaveRecentChanges()
+update.GetItemToSend()
+scheduler.start()
