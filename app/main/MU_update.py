@@ -123,28 +123,39 @@ class MU_UpdateData(object):
         return self.cache
     def SaveRecentChanges(self):
         self.FilterValid()
+        self.cache=filter(GetImage,self.cache)
         for i in range(len(self.cache)):
-            flag=GetImage(self.cache[i])
-            if flag==True:
-                itemkey=MU_MainConfig.EDITEDPREFIX+self.cache[i]
-                r.hset('queue',itemkey,self.cache[i])
-                timenow=time.time()
-                r.zadd('expire',itemkey,timenow)
-            else:
-                pass
+            itemkey=MU_MainConfig.EDITEDPREFIX+self.cache[i]
+            r.hset('queue',itemkey,self.cache[i])
+            timenow=time.time()
+            r.zadd('expire',itemkey,timenow)
     def RemoveExpiredItems(self):
         timenow=time.time()
         ThreeDaysAgo=time.time()-MU_MainConfig.THREEDAYS
         zset=r.zrangebyscore('expire',ThreeDaysAgo,timenow)
-        hkeys=r.hkeys('oriqueue')
+        hkeys=r.hkeys('queue')
         setofzset=set(zset)
         setofhkeys=set(hkeys)
         intersection=list(setofzset&setofhkeys)
         for i in range(len(hkeys)):
             if hkeys[i] not in intersection:
                 title=hget('queue',hkeys[i])
-                DeletePage(title)
-
+                if hkeys[i] is MU_MainConfig.EDITEDPREFIX+title:
+                    r.zrem('expire',MU_MainConfig.EDITEDPREFIX+title)
+                    r.hdel('queue',hkeys[i])
+                    name=r.hget('img',MU_MainConfig.EDITEDPREFIX+title)
+                    os.remove('../imgcache/'+name)
+                    r.hdel('img',MU_MainConfig.EDITEDPREFIX+title)
+                    r.hdel('imgkey',MU_MainConfig.EDITEDPREFIX+title)
+                    score=r.zscore('queuenumber',title)
+                    r.zrem('queuenumber',title)
+                    scorequeue=r.zrange('queuenumber',int(score)-1,-1)
+                    for i in range(len(scorequeue)):
+                        score=r.zscore('queuenumber',scorequeue[i])
+                        r.zadd('queuenumber',scorequeue[i],score-1)
+                else:
+                    r.zrem('expire',MU_MainConfig.EDITEDPREFIX+title)
+                    r.zrem('queue',hkeys[i])
 
     def GetItemToSend(self):
         scorequeue=r.zrevrange('queuenumber',0,-1)
@@ -171,7 +182,17 @@ class MU_UpdateData(object):
         ReadyToPostItem=Keys[0]
         UnPushed=ForbiddenItemPushed(ReadyToPostItem)
         if UnPushed is not False:
-            DeletePage(ReadyToPostItem)
+            r.hdel('queue',hkeys[i])
+            name=r.hget('img',MU_MainConfig.EDITEDPREFIX+title)
+            os.remove('../imgcache/'+name)
+            r.hdel('img',MU_MainConfig.EDITEDPREFIX+title)
+            r.hdel('imgkey',MU_MainConfig.EDITEDPREFIX+title)
+            score=r.zscore('queuenumber',title)
+            r.zrem('queuenumber',title)
+            scorequeue=r.zrange('queuenumber',int(score)-1,-1)
+            for i in range(len(scorequeue)):
+                score=r.zscore('queuenumber',scorequeue[i])
+                r.zadd('queuenumber',scorequeue[i],score-1)
             r.hset('queue',MU_MainConfig.PUSHEDPREFIX+ReadyToPostItem,ReadyToPostItem)
         else:
             pass
