@@ -117,7 +117,7 @@ class MU_UpdateData(object):
     def GetRecentChanges(self):
         value=for_rc()
         for i in range(len(value)):
-            if value[i]['newlen']>1000:
+            if (value[i]['newlen']>1000) and (value[i]['newlen']-value[i]['oldlen']>100):
                 self.cache.append(value[i]['title'])
             else:
                 pass
