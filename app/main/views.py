@@ -8,10 +8,11 @@ from .. model import User,Page
 from datetime import datetime
 import pdb
 from collections import OrderedDict
-from .form import PushForm,EditProfileForm,AddUserForm,AdminEditProfileForm
+from .form import PushForm,EditProfileForm,AddUserForm,AdminEditProfileForm,BanKeywordForm,LimitKeywordForm
 from . import main
 from MU_update import ForbiddenItemsFilter,ForbiddenItemPushed,ForbiddenItemGet
 from MU_utils import GetNamespace
+from MU_weibo import RefreshCode
 import sys
 reload(sys)
 sys.setdefaultencoding('utf8')
@@ -31,9 +32,20 @@ def update():
     title=[]
     u=User()
     title=p.GetTitles()
+    titles=[]
     pushtime = u.GetPushtime(g.user)
     deltime = u.GetDeltime(g.user)
     jsondata=request.get_json()
+    total=len(title)
+    page = request.args.get('page',1,type=int)
+    per_page=10
+    offset=(page - 1) * per_page
+    for i in range(len(title)):
+        if i < per_page and (offset+i) < len(title):
+            titles.append(title[offset+i])
+        else:
+            break
+    pagination=Pagination(css_framework='bootstrap3',link_size='sm',show_single_page=False,page=page,per_page=per_page,total=total,format_total=True,format_number=True)
     if request.method == 'POST' and jsondata['action'] == 'post':
         if pushtime is not '0':
             title=jsondata['title']
@@ -54,7 +66,7 @@ def update():
                 pass
             else:
                 abort(403)
-    return render_template('update.html',title=title,current_time=datetime.utcnow(),pushtime=pushtime,deltime=deltime)
+    return render_template('update.html',titles=titles,current_time=datetime.utcnow(),pushtime=pushtime,deltime=deltime,page=page,per_page=per_page,pagination=pagination)
 @main.route('/mupdate',methods=['GET','POST'])
 @login_required
 def mupdate():
@@ -76,6 +88,7 @@ def mupdate():
                     if flag is True:
                         p.RecordUpdate(title,current_user.id,'手动推送')
                         flash('推送成功，本条目将在下一次推送时被推送')
+                        return redirect('/mupdate')
                     else:
                         flash('错误-条目图片不符合要求')
                 else:
@@ -90,7 +103,7 @@ def mupdate():
 def user(username):
     u=User()
     adminflag=current_user.is_administrator(g.user)
-    if g.user is username or adminflag is True:
+    if g.user == username or adminflag is True:
         flag=u.CheckUser(username)
         if flag is False:
             abort(404)
@@ -195,4 +208,61 @@ def log():
         pagination=Pagination(css_framework='bootstrap3',link_size='sm',show_single_page=False,page=page,per_page=per_page,total=total,format_total=True,format_number=True)
         return render_template('log.html',records=records,page=page,per_page=per_page,pagination=pagination)  
     else:
-        abort(403)      
+        abort(403)
+
+
+@main.route('/ban',methods=['GET','POST'])
+@login_required
+def ban():
+    flag=current_user.is_administrator(g.user)
+    if flag is True:
+        form=BanKeywordForm()
+        p = Page()
+        jsondata=request.get_json()
+        if request.method == 'POST':
+            if jsondata:
+                keyword = jsondata['keyword']
+                p.DelBan(keyword)
+                flash('成功删除关键词')
+                location=url_for('.ban')
+                return jsonify({"status":302,"location":location})
+            if form.validate():
+                keyword = form.keyword.data
+                p.AddBan(keyword)
+                flash('成功添加关键词')
+                return redirect('ban')
+        banlist = p.GetBan()
+        keywords = []
+        total = len(banlist)
+        page = request.args.get('page', 1, type=int)
+        per_page = 10
+        offset = (page - 1) * per_page
+        for i in range(len(banlist)):
+            if i < per_page and (offset+i) < len(banlist):
+                keywords.append(banlist[offset+i])
+            else:
+                break
+        pagination=Pagination(css_framework='bootstrap3',link_size='sm',show_single_page=False,page=page,per_page=per_page,total=total,format_total=True,format_number=True)
+        return render_template('ban.html',keywords=keywords,page=page,per_page=per_page,pagination=pagination,form=form)
+    else:
+        abort(403)
+@main.route('/code')
+@login_required
+def code():
+    code=request.args.get('code')
+    flag=RefreshCode(code)
+    if flag is True:
+        return render_template('success.html')
+    else:
+        return render_template('failed.html',e=flag)
+
+@main.route('/limit')
+@login_required
+def limit():
+    flag=current_user.is_administrator(g.user)
+    if flag is True:
+        form = LimitKeywordForm()
+        
+
+
+

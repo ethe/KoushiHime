@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+{% block title %}萌娘百科的更新姬-关键词屏蔽{% endblock %}
+{% block scripts %}
+{{ super() }}
+<script type="text/javascript" src="/static/refresh.js" ></script>
+<script>
+function sendtoken(callback, id) {
+    var csrftoken = "{{ csrf_token() }}"
+    callback(id, csrftoken)
+}
+</script>
+{% endblock %}
+{% block mainbody %}
+<div class="raw">  
+    <div class="col-md-6">
+        <table class='table table-hover'>
+            <tr>
+                <th>序号</th>
+                <th>关键词</th>
+                <th>删除</th>
+            </tr>
+            <tr>
+            {% for keyword in keywords %}
+                <th>{{ loop.index + (page - 1) * per_page }}</th>
+                <th>{{ keyword }}</th>
+                <th>                    
+                    <button class='btn btn-default' id='{{keyword}}' value='edit' onclick='sendtoken(delkeywordbtnclick,this.id)'>  删除</button>
+                </th>
+            </tr>
+                {% endfor %}  
+        </table>
+        {{ pagination.links }}
+    </div>
+    <div class="col-md-4 col-md-offset-1">
+        <form method="POST">
+            {{ form.hidden_tag() }}
+            {{ form.keyword.label }}{{ form.keyword(class='form-control',id='keyword') }}<br />
+            {{ form.submit(class='btn btn-primary form-control') }}<br />
+        </form>
+    </div>
+</div>
+</div>
+{% endblock %}

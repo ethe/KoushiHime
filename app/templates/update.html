@@ -21,9 +21,9 @@ function sendtoken(callback,id){
                 <th>优先推送</th>
                 <th>删除</th>
             </tr>
-            {% for title in title %}
+            {% for title in titles %}
             <tr>
-                <th>{{ loop.index }}</th>
+                <th>{{ loop.index + (page - 1) * per_page }}</th>
                 <th>
                     <p>{{ title }}</p>
                 </th>
@@ -36,6 +36,7 @@ function sendtoken(callback,id){
             </tr>
             {% endfor %}
         </table>
+        {{ pagination.links }}
     </div>
     <div class='col-md-3 col-md-offset-1'>
         <p style='lead'>{{ moment(current_time).format('LLL') }}</p>

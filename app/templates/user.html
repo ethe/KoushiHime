@@ -13,7 +13,11 @@
         <p>个人签名:{{ u.aboutme }}</p>
         {% endif %}
     </div>
+    {% if current_user.is_administrator(current_user.id) %}
+    <div class='text-right'><a href='/edit_profile/{{ username }}'>编辑资料</a>
+    {% else %}
     <div class='text-right'><a href='/edit_profile'>编辑资料</a>
+    {% endif %}
     </div>
 </div>
 {% endblock %}

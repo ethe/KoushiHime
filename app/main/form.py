@@ -36,3 +36,11 @@ class AdminEditProfileForm(Form):
     def __init__(self,*args,**kwargs):
         super(AdminEditProfileForm,self).__init__(*args,**kwargs)
         self.role.choices=[('管理员','管理员'),('巡察姬','巡察姬'),('封禁','封禁')]
+class BanKeywordForm(Form):
+    keyword=StringField('屏蔽关键词(请使用python正则表达式书写)',[validators.Length(min=3,max=100),validators.Required()])
+    submit=SubmitField('提交')
+class LimitKeywordForm(Form):
+    limitcategory = StringField('限制分类(请在分类名前加Category:',[validators.Required(),validators.Length(min=8,max=100)])
+    catsubmit = SubmitField('提交')
+    limittopic = StringField('限制标题(请使用python正则表达式书写)',[validators.Length(min=3,max=100),validators.Required()])
+    topicsubmit = SubmitField('提交')

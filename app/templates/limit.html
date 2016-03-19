@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+{% block title %}萌娘百科的更新姬-抓取限制{% endblock %}
+{% block scripts %}
+{{ super() }}
+<script type="text/javascript" src="/static/refresh.js" ></script>
+<script>
+function sendtoken(callback, id) {
+    var csrftoken = "{{ csrf_token() }}"
+    callback(id, csrftoken)
+}
+</script>
+{% endblock %}
+{% block mainbody %}
+<div class="raw">  
+    <div class="col-md-6">
+        <p class='lead'>限制的分类</p>
+        <table class='table table-hover'>
+            <tr>
+                <th>序号</th>
+                <th>分类名</th>
+                <th>删除</th>
+            </tr>
+            <tr>
+            {% for cat in cats %}
+                <th>{{ loop.index + (page - 1) * per_page }}</th>
+                <th>{{ cat }}</th>
+                <th>                    
+                    <button class='btn btn-default' id='{{cat}}' value='delete' onclick='sendtoken(delcatbtnclick,this.id)'>  删除</button>
+                </th>
+            </tr>
+                {% endfor %}  
+        </table>
+        {{ catpagination.links }}
+    </div>
+    <div class="col-md-4 col-md-offset-1">
+        <form method="POST">
+            {{ form.hidden_tag() }}
+            {{ form.limitcategory.label }}{{ form.limitcategory(class='form-control',id='keyword') }}<br />
+            {{ form.catsubmit(class='btn btn-primary form-control') }}<br />
+        </form>
+    </div>
+</div>
+</div>
+<div class="raw">  
+    <div class="col-md-6">
+        <p class='lead'>限制的词条</p>
+        <table class='table table-hover'>
+            <tr>
+                <th>序号</th>
+                <th>词条名</th>
+                <th>删除</th>
+            </tr>
+            <tr>
+            {% for topic in topics %}
+                <th>{{ loop.index + (page - 1) * per_page }}</th>
+                <th>{{ topic }}</th>
+                <th>                    
+                    <button class='btn btn-default' id='{{topic}}' value='delete' onclick='sendtoken(deltopicbtnclick,this.id)'>  删除</button>
+                </th>
+            </tr>
+                {% endfor %}  
+        </table>
+        {{ topicpagination.links }}
+    </div>
+    <div class="col-md-4 col-md-offset-1">
+        <form method="POST">
+            {{ form.hidden_tag() }}
+            {{ form.limittopic.label }}{{ form.limittopic(class='form-control',id='keyword') }}<br />
+            {{ form.topicsubmit(class='btn btn-primary form-control') }}<br />
+        </form>
+    </div>
+</div>
+</div>
+{% endblock %}

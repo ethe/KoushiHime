@@ -25,10 +25,10 @@
                     <li><a href='/user/{{current_user.id}}'>个人资料</a></li>
                     {% if current_user.is_administrator(current_user.id) %}
                     <li><a href='/userlist'>用户列表</a></li>
-                    {% endif %}
                     <li><a href='/log'>推送记录</a></li>
+                    <li><a href='/ban'>关键词屏蔽</a></li>
                     {% endif %}
-                    <li><a href='/'>留言版(2.0预定)</a></li>
+                    {% endif %}
                 </ul>
                 <ul class='nav navbar-nav navbar-right'>
                     {% if current_user.is_authenticated %}

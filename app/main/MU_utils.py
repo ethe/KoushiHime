@@ -7,7 +7,6 @@ import os
 import sys
 reload(sys)
 import pdb
-import re
 import time
 import datetime
 import json

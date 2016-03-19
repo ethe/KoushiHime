@@ -107,6 +107,29 @@ function userdelbtnclick(username, csrftoken) {
         data: JSON.stringify(PostVal)
     })
 }
+function delkeywordbtnclick(keyword,csrftoken) {
+    $.ajaxSetup({
+        beforeSend: function(xhr, settings) {
+            if (!/^(GET|HEAD|OPTIONS|TRACE)$/i.test(settings.type)) {
+                xhr.setRequestHeader("X-CSRFToken", csrftoken)
+                }
+            }
+        })
+    var PostVal = {
+        "keyword" : keyword
+    }
+    $.ajax({
+        type: 'POST',
+        contentType: 'application/json',
+        url: '/ban',
+        data: JSON.stringify(PostVal),
+        success: function(data) {
+            if (data.status == 302) {
+                location.href = data.location
+            }
+        }
+    })
+}
 $(function() {
     $('#loadingModal').on('hide.bs.modal', function() {
         location.reload()

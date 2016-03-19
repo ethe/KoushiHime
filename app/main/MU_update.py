@@ -12,6 +12,7 @@ import logging,logging.handlers
 import traceback
 import weibo
 import pdb
+import re
 from collections import OrderedDict
 sys.setdefaultencoding('utf-8')
 from MU_conf import MU_MainConfig
@@ -86,6 +87,12 @@ def ForbiddenItemGet(title):
     if MU_MainConfig.EDITEDPREFIX+title in keys:
         return False
     return True
+def ForbiddenItemBanned(title):
+    keywords = r.hkeys('bannedkeyword')
+    for keyword in keywords:
+        if re.search(keyword,title):
+            return False
+    return True
 def DeletePage(title):
     r.zrem('expire',MU_MainConfig.EDITEDPREFIX+title)
     r.hdel('queue',MU_MainConfig.EDITEDPREFIX+title)
@@ -103,7 +110,7 @@ def DeletePage(title):
 class MU_UpdateData(object):
     def __init__(self):
         super(MU_UpdateData,self).__init__()
-        self.cache=[]
+        self.cache=['美少女花骑士:杏花','美少女花骑士:樱花','美少女花骑士:紫三色堇']
         self.SendFlag=False
     def initupdater(self):
         self.GetRecentChanges(2)
@@ -120,10 +127,45 @@ class MU_UpdateData(object):
         self.cache=filter(ForbiddenItemsFilter,self.cache)
         self.cache=filter(ForbiddenItemPushed,self.cache)
         self.cache=filter(ForbiddenItemGet,self.cache)
+        self.cache=filter(ForbiddenItemBanned,self.cache)
         return self.cache
+    def FamiliarItemForbidden(self):
+        topics = self.cache
+        ForbiddenCategories=r.hkeys('forbiddencategories')
+        ForbiddenTopics=r.hkeys('forbiddentopics')
+        ForbiddenCategoriesSet=set(ForbiddenCategories)
+        rc_cats=map(GetCategory,self.cache)
+        for i in range(len(topics)):
+            catsset=set(rc_cats[i])
+            crossed=catsset&ForbiddenCategoriesSet
+            for j in range(len(ForbiddenTopics)):
+                matchflag = re.search(ForbiddenTopics[j],topics[i])
+            if crossed:
+                localnames = locals()
+                crosslist = list(crossed)
+                for k in range(len(crosslist)):
+                    varname = crosslist[k]
+                    if varname in dir():
+                        if localnames[varname] >= 3:
+                            del self.cache[i]
+                        else:
+                            localnames[varname] = localnames[varname] + 1
+                    else:
+                        localnames[varname] = 1
+            if matchflag is not None:
+                localnames=locals()
+                varname = matchflag.group(0)
+                if varname in dir():
+                    if localnames[varname] >= 3:
+                        del self.cache[i]
+                    else:
+                        localnames[varname] = localnames[varname] + 1
+                else:
+                    localnames[varname] = 1
     def SaveRecentChanges(self):
-        self.FilterValid()
-        self.cache=filter(GetImage,self.cache)
+        #self.FilterValid()
+        #self.cache=filter(GetImage,self.cache)
+        self.FamiliarItemForbidden()
         for i in range(len(self.cache)):
             itemkey=MU_MainConfig.EDITEDPREFIX+self.cache[i]
             r.hset('queue',itemkey,self.cache[i])
@@ -139,7 +181,7 @@ class MU_UpdateData(object):
         intersection=list(setofzset&setofhkeys)
         for i in range(len(hkeys)):
             if hkeys[i] not in intersection:
-                title=hget('queue',hkeys[i])
+                title=r.hget('queue',hkeys[i])
                 if hkeys[i] is MU_MainConfig.EDITEDPREFIX+title:
                     r.zrem('expire',MU_MainConfig.EDITEDPREFIX+title)
                     r.hdel('queue',hkeys[i])
@@ -155,7 +197,7 @@ class MU_UpdateData(object):
                         r.zadd('queuenumber',scorequeue[i],score-1)
                 else:
                     r.zrem('expire',MU_MainConfig.EDITEDPREFIX+title)
-                    r.zrem('queue',hkeys[i])
+                    r.hdel('queue',hkeys[i])
 
     def GetItemToSend(self):
         scorequeue=r.zrevrange('queuenumber',0,-1)
@@ -182,13 +224,14 @@ class MU_UpdateData(object):
         ReadyToPostItem=Keys[0]
         UnPushed=ForbiddenItemPushed(ReadyToPostItem)
         if UnPushed is not False:
-            r.hdel('queue',hkeys[i])
-            name=r.hget('img',MU_MainConfig.EDITEDPREFIX+title)
+            name=r.hget('img',MU_MainConfig.EDITEDPREFIX+ReadyToPostItem)
+            post(ReadyToPostItem,name)
+            r.hdel('queue',MU_MainConfig.EDITEDPREFIX+ReadyToPostItem)
             os.remove('../imgcache/'+name)
-            r.hdel('img',MU_MainConfig.EDITEDPREFIX+title)
-            r.hdel('imgkey',MU_MainConfig.EDITEDPREFIX+title)
-            score=r.zscore('queuenumber',title)
-            r.zrem('queuenumber',title)
+            r.hdel('img',MU_MainConfig.EDITEDPREFIX+ReadyToPostItem)
+            r.hdel('imgkey',MU_MainConfig.EDITEDPREFIX+ReadyToPostItem)
+            score=r.zscore('queuenumber',ReadyToPostItem)
+            r.zrem('queuenumber',ReadyToPostItem)
             scorequeue=r.zrange('queuenumber',int(score)-1,-1)
             for i in range(len(scorequeue)):
                 score=r.zscore('queuenumber',scorequeue[i])

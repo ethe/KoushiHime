@@ -143,6 +143,26 @@ class Page(object):
             return True
         else:
             return False
+    def AddBan(self,keyword):
+        r.hset('bannedkeyword',keyword,keyword)
+    def GetBan(self):
+        banlist = r.hkeys('bannedkeyword')
+        return banlist
+    def DelBan(self,keyword):
+        r.hdel('bannedkeyword',keyword)
+    def AddLimitCat(self,cat):
+        r.hset('forbiddencategotries',cat,cat)
+    def GetLimitCat(self):
+        catlist = r.hkeys('forbiddencategotries')
+        return catlist
+    def DelLimitCat(self,cat):
+        r.hdel('forbiddencategotries',cat)
+    def AddLimitTopic(self,topic):
+        r.hset('forbiddentopics',topic,topic)
+    def GetLimitTopic(self):
+        topiclist = r.hkeys('forbiddentopics')
+    def DelLimitTopic(self,topic):
+        r.hdel('forbiddentopics',topic)
     def RecordUpdate(self,title,username,action):
         timenow=time.time()
         utctime=datetime.utcnow()
