@@ -110,7 +110,7 @@ def DeletePage(title):
 class MU_UpdateData(object):
     def __init__(self):
         super(MU_UpdateData,self).__init__()
-        self.cache=['美少女花骑士:杏花','美少女花骑士:樱花','美少女花骑士:紫三色堇']
+        self.cache=[]
         self.SendFlag=False
     def initupdater(self):
         self.GetRecentChanges(2)
@@ -163,8 +163,8 @@ class MU_UpdateData(object):
                 else:
                     localnames[varname] = 1
     def SaveRecentChanges(self):
-        #self.FilterValid()
-        #self.cache=filter(GetImage,self.cache)
+        self.FilterValid()
+        self.cache=filter(GetImage,self.cache)
         self.FamiliarItemForbidden()
         for i in range(len(self.cache)):
             itemkey=MU_MainConfig.EDITEDPREFIX+self.cache[i]
