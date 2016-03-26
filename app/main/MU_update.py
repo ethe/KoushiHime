@@ -18,6 +18,7 @@ sys.setdefaultencoding('utf-8')
 from MU_conf import MU_MainConfig
 from MU_weibo import post,PrepareLogin
 from MU_utils import r,unique_str,loggingInit,for_cat,for_rc,_decode_dict
+import copy
 os.chdir(os.path.dirname(__file__))
 log=loggingInit('../log/update.log')
 def GetCategory(title):
@@ -110,14 +111,14 @@ def DeletePage(title):
 class MU_UpdateData(object):
     def __init__(self):
         super(MU_UpdateData,self).__init__()
-        self.cache=[]
+        self.cache=['美少女花骑士:杏花','美少女花骑士:樱花','美少女花骑士:紫三色堇','舰队Collection:荒潮','舰队Collection:大潮','舰队Collection:朝潮','无尽的饼干','Overdrive(音乐专辑)']
         self.SendFlag=False
     def initupdater(self):
         self.GetRecentChanges(2)
     def GetRecentChanges(self):
         value=for_rc()
         for i in range(len(value)):
-            if (value[i]['newlen']>1000) and (value[i]['newlen']-value[i]['oldlen']>100):
+            if value[i]['newlen']>1000:
                 self.cache.append(value[i]['title'])
             else:
                 pass
@@ -130,7 +131,8 @@ class MU_UpdateData(object):
         self.cache=filter(ForbiddenItemBanned,self.cache)
         return self.cache
     def FamiliarItemForbidden(self):
-        topics = self.cache
+        pdb.set_trace()
+        topics = copy.deepcopy(self.cache)
         ForbiddenCategories=r.hkeys('forbiddencategories')
         ForbiddenTopics=r.hkeys('forbiddentopics')
         ForbiddenCategoriesSet=set(ForbiddenCategories)
@@ -138,8 +140,11 @@ class MU_UpdateData(object):
         for i in range(len(topics)):
             catsset=set(rc_cats[i])
             crossed=catsset&ForbiddenCategoriesSet
-            for j in range(len(ForbiddenTopics)):
-                matchflag = re.search(ForbiddenTopics[j],topics[i])
+            if len(ForbiddenTopics) is not 0:
+                for j in range(len(ForbiddenTopics)):
+                    matchflag = re.search(ForbiddenTopics[j],topics[i])
+            else:
+                matchflag = None
             if crossed:
                 localnames = locals()
                 crosslist = list(crossed)
@@ -147,7 +152,7 @@ class MU_UpdateData(object):
                     varname = crosslist[k]
                     if varname in dir():
                         if localnames[varname] >= 3:
-                            del self.cache[i]
+                            self.cache.remove(topics[i])
                         else:
                             localnames[varname] = localnames[varname] + 1
                     else:
@@ -157,14 +162,14 @@ class MU_UpdateData(object):
                 varname = matchflag.group(0)
                 if varname in dir():
                     if localnames[varname] >= 3:
-                        del self.cache[i]
+                        self.cache.remove(topics[i])
                     else:
                         localnames[varname] = localnames[varname] + 1
                 else:
                     localnames[varname] = 1
     def SaveRecentChanges(self):
-        self.FilterValid()
-        self.cache=filter(GetImage,self.cache)
+        #self.FilterValid()
+        #self.cache=filter(GetImage,self.cache)
         self.FamiliarItemForbidden()
         for i in range(len(self.cache)):
             itemkey=MU_MainConfig.EDITEDPREFIX+self.cache[i]
