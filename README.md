@@ -1,5 +1,5 @@
 # MoegirlUpdater
-https://travis-ci.org/kafuuchino/MoegirlUpdater.svg?branch=master
+[![Build Status](https://travis-ci.org/kafuuchino/MoegirlUpdater.svg?branch=master)](https://travis-ci.org/kafuuchino/MoegirlUpdater)
 
 萌娘百科的新更新姬
 
