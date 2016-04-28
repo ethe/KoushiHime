@@ -1,19 +1,25 @@
+# -*- coding:utf-8 -*-
+
 import os
-from app import create_app
-from flask.ext.script import Manager,Shell
-from app.model import User
-import app.cron
-app=create_app()
-manager=Manager(app)
-def init_context():
-    return dict(app=app)
-    manager.add_command('shell',Shell(make_context=init_context))
-@manager.command
-def test():
-    """Run the Unit tests"""
-    print 'Prepare To Test'
-    import unittest
-    tests=unittest.TestLoader().discover('tests')
-    unittest.TextTestRunner(verbosity=2).run(tests)
-if __name__=='__main__':
+from moegirl import create_app, db
+from flask.ext.script import Manager, Shell, Server
+from flask.ext.migrate import Migrate, MigrateCommand
+
+
+app = create_app(os.getenv('FLASK_CONFIG') or 'default')
+manager = Manager(app)
+migrate = Migrate(app, db)
+
+
+def make_shell_context():
+    return {"app": app}
+manager.add_command("shell", Shell(make_context=make_shell_context))
+
+manager.add_command('db', MigrateCommand)
+
+server = Server(host="0.0.0.0", port=5000, use_reloader=True)
+manager.add_command("runserver", server)
+
+
+if __name__ == '__main__':
     manager.run()
