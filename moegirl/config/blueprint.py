@@ -1,4 +1,7 @@
 # -*- coding:utf-8 -*-
+"""
+注册蓝图
+"""
 
 # from moegirl.main import main as main_blueprint
 from moegirl.auth import auth as auth_blueprint

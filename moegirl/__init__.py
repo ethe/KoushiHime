@@ -18,6 +18,9 @@ login_manager = LoginManager()
 
 
 def create_app(config_name):
+    """
+    工厂函数，在服务运行前加载配置
+    """
     app = Flask(__name__)
     from config import config
     app.config.from_object(config[config_name])

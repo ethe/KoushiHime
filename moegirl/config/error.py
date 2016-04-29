@@ -1,4 +1,7 @@
 # -*- coding:utf-8 -*-
+"""
+注册错误页面
+"""
 
 from flask import render_template
 

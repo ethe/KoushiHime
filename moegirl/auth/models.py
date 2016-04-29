@@ -8,6 +8,10 @@ from werkzeug.security import generate_password_hash, check_password_hash
 
 
 class Permission:
+    """
+    使用位运算标记用户权限
+    每一位表示一种权限
+    """
     BLOCKED = 0x00
     READ = 0x01
     ADMINISTER = 0x80
@@ -15,10 +19,16 @@ class Permission:
 
 @login_manager.user_loader
 def load_user(user_id):
+    """
+    flask-login 要求完成的方法
+    """
     return User.query.get(int(user_id))
 
 
 class Role(db.Model, CRUDMixin):
+    """
+    权限组
+    """
     __tablename__ = 'roles'
 
     id = db.Column(db.Integer, primary_key=True)
@@ -28,6 +38,9 @@ class Role(db.Model, CRUDMixin):
 
 
 class User(UserMixin, db.Model, CRUDMixin):
+    """
+    用户
+    """
     __tablename__ = 'users'
 
     id = db.Column(db.Integer, primary_key=True)
@@ -72,6 +85,9 @@ class User(UserMixin, db.Model, CRUDMixin):
 
 
 class PushRecord(db.model, CRUDMixin):
+    """
+    用户的手动操作记录
+    """
     __tablename__ = 'push_records'
 
     id = db.Column(db.Integer, primary_key=True)

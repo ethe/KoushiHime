@@ -10,8 +10,8 @@ basedir = os.path.abspath(os.path.dirname(__file__))
 
 class Config:
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'the answer of life, universe and everything'
-    WTF_CSRF_ENABLED = True
-    SQLALCHEMY_COMMIT_ON_TEARDOWN = True
+    WTF_CSRF_ENABLED = True  # 启用csrf保护
+    SQLALCHEMY_COMMIT_ON_TEARDOWN = True  # 在每次会话被销毁前自动commit未commit的会话
 
     @staticmethod
     def init_app(app):  #: 初始化
