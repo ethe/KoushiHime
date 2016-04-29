@@ -1,10 +1,19 @@
 # -*- coding: utf-8 -*-
 
+from . import auth
 from models import User
 from forms import LoginForm
 from flask.views import MethodView
-from flask.ext.login import login_user, login_required, logout_user
 from flask import render_template, request, flash, redirect, url_for
+from flask.ext.login import login_user, login_required, logout_user, current_user
+
+
+class Block(MethodView):
+    decorators = [auth.before_app_request, login_required]
+
+    def get():
+        if current_user.is_blocked():
+            return render_template('auth/block.html')
 
 
 class Login(MethodView):

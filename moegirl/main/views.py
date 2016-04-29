@@ -1,21 +1,26 @@
 # -*- coding: utf-8 -*-
-from datetime import datetime
-from flask import render_template,session,redirect,url_for,request,abort,flash,g,jsonify
-from flask.ext.login import login_required,current_user
-from flask.ext.paginate import Pagination
-from MU_utils import GetNamespace
-from .. model import User,Page
-from datetime import datetime
-import pdb
-from collections import OrderedDict
-from .form import PushForm,EditProfileForm,AddUserForm,AdminEditProfileForm,BanKeywordForm,LimitKeywordForm
-from . import main
-from MU_update import ForbiddenItemsFilter,ForbiddenItemPushed,ForbiddenItemGet
-from MU_utils import GetNamespace
-from MU_weibo import RefreshCode
-import sys
-reload(sys)
-sys.setdefaultencoding('utf8')
+# from datetime import datetime
+# from flask import render_template,session,redirect,url_for,request,abort,flash,g,jsonify
+# from flask.ext.login import login_required,current_user
+# from flask.ext.paginate import Pagination
+# from MU_utils import GetNamespace
+# from .. model import User,Page
+# from datetime import datetime
+# import pdb
+# from collections import OrderedDict
+# from .form import PushForm,EditProfileForm,AddUserForm,AdminEditProfileForm,BanKeywordForm,LimitKeywordForm
+# from . import main
+# from MU_update import ForbiddenItemsFilter,ForbiddenItemPushed,ForbiddenItemGet
+# from MU_utils import GetNamespace
+# from MU_weibo import RefreshCode
+# import sys
+# reload(sys)
+
+from flask.views import MethodView
+
+
+
+
 @main.before_request
 @login_required
 def before_request():
@@ -53,7 +58,7 @@ def update():
             if flag==True:
                 p.RecordUpdate(title,current_user.id,'推送')
                 pass
-            else: 
+            else:
                 abort(403)
         else:
             abort(403)
@@ -206,7 +211,7 @@ def log():
             else:
                 break
         pagination=Pagination(css_framework='bootstrap3',link_size='sm',show_single_page=False,page=page,per_page=per_page,total=total,format_total=True,format_number=True)
-        return render_template('log.html',records=records,page=page,per_page=per_page,pagination=pagination)  
+        return render_template('log.html',records=records,page=page,per_page=per_page,pagination=pagination)
     else:
         abort(403)
 
@@ -262,7 +267,7 @@ def limit():
     flag=current_user.is_administrator(g.user)
     if flag is True:
         form = LimitKeywordForm()
-        
+
 
 
 
