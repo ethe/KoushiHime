@@ -3,6 +3,7 @@
 from datetime import datetime
 from flask.ext.login import UserMixin
 from moegirl import db, login_manager
+from moegirl.utils.database import CRUDMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 
 
@@ -17,7 +18,7 @@ def load_user(user_id):
     return User.query.get(int(user_id))
 
 
-class Role(db.Model):
+class Role(db.Model, CRUDMixin):
     __tablename__ = 'roles'
 
     id = db.Column(db.Integer, primary_key=True)
@@ -26,7 +27,7 @@ class Role(db.Model):
     users = db.relationship('User', backref='role', lazy='dynamic')
 
 
-class User(UserMixin, db.Model):
+class User(UserMixin, db.Model, CRUDMixin):
     __tablename__ = 'users'
 
     id = db.Column(db.Integer, primary_key=True)
@@ -70,7 +71,7 @@ class User(UserMixin, db.Model):
         return self.role.permissions == Permission.BLOCKED
 
 
-class PushRecord(db.model):
+class PushRecord(db.model, CRUDMixin):
     __tablename__ = 'push_records'
 
     id = db.Column(db.Integer, primary_key=True)
