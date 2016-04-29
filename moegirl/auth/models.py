@@ -36,6 +36,21 @@ class Role(db.Model, CRUDMixin):
     permissions = db.Column(db.Integer)
     users = db.relationship('User', backref='role', lazy='dynamic')
 
+    @staticmethod
+    def init_roles():
+        roles = {
+            'Blocked': Permission.BLOCKED,
+            'Rounder': Permission.READ,
+            'Administrator': 0xff
+        }
+        for r in roles:
+            role = Role.query.filter_by(name=r).first()
+            if role is None:
+                role = Role(name=r)
+            role.permissions = roles[r]
+            db.session.add(role)
+        db.session.commit()
+
 
 class User(UserMixin, db.Model, CRUDMixin):
     """
