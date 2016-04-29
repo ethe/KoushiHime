@@ -26,6 +26,7 @@ def create_app(config_name):
     app.config.from_object(config[config_name])
     config[config_name].init_app(app)
 
+    db.init_app(app)
     bootstrap.init_app(app)
     mail.init_app(app)
     moment.init_app(app)
