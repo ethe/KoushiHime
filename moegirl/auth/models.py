@@ -99,7 +99,7 @@ class User(UserMixin, db.Model, CRUDMixin):
         return self.role.permissions == Permission.BLOCKED
 
 
-class PushRecord(db.model, CRUDMixin):
+class PushRecord(db.Model, CRUDMixin):
     """
     用户的手动操作记录
     """
