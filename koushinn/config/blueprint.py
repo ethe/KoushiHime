@@ -3,8 +3,8 @@
 注册蓝图
 """
 
-# from moegirl.main import main as main_blueprint
-from moegirl.auth import auth as auth_blueprint
+# from koushinn.main import main as main_blueprint
+from koushinn.auth import auth as auth_blueprint
 
 
 def regist(app):

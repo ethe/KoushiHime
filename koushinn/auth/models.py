@@ -2,19 +2,10 @@
 
 from datetime import datetime
 from flask.ext.login import UserMixin
-from moegirl import db, login_manager
-from moegirl.utils.database import CRUDMixin
+from constants import Permission
+from koushinn import db, login_manager
+from koushinn.utils.database import CRUDMixin
 from werkzeug.security import generate_password_hash, check_password_hash
-
-
-class Permission:
-    """
-    使用位运算标记用户权限
-    每一位表示一种权限
-    """
-    BLOCKED = 0x00
-    READ = 0x01
-    ADMINISTER = 0x80
 
 
 @login_manager.user_loader
@@ -31,7 +22,7 @@ class Role(db.Model, CRUDMixin):
     """
     __tablename__ = 'roles'
 
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer(), primary_key=True)
     name = db.Column(db.String(64), unique=True)
     permissions = db.Column(db.Integer)
     users = db.relationship('User', backref='role', lazy='dynamic')
@@ -40,7 +31,7 @@ class Role(db.Model, CRUDMixin):
     def init_roles():
         roles = {
             'Blocked': Permission.BLOCKED,
-            'Rounder': Permission.READ,
+            'Rounder': Permission.READ | Permission.MANUEL_PUSH,
             'Administrator': 0xff
         }
         for r in roles:
@@ -58,10 +49,10 @@ class User(UserMixin, db.Model, CRUDMixin):
     """
     __tablename__ = 'users'
 
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer(), primary_key=True)
     username = db.Column(db.String(64), unique=True, index=True)
     role_id = db.Column(db.Integer, db.ForeignKey('roles.id'))
-    push_records = db.relationship('Entry', backref='handlers', lazy='dynamic')
+    push_records = db.relationship('UserOpration', backref='handlers', lazy='dynamic')
     password_hash = db.Column(db.String(128))
     about_me = db.Column(db.Text())
     member_since = db.Column(db.DateTime(), default=datetime.utcnow)
@@ -97,3 +88,13 @@ class User(UserMixin, db.Model, CRUDMixin):
 
     def is_blocked(self):
         return self.role.permissions == Permission.BLOCKED
+
+
+class UserOpration(db.Model, CRUDMixin):
+    __tablename__ = 'user_oprations'
+
+    id = db.Column(db.Integer(), primary_key=True)
+    user_id = db.Column(db.Integer(), db.ForeignKey('users.id'))
+    opration = db.Column(db.SmallInteger())
+    title = db.Column(db.Text())
+    created_time = db.Column(db.DateTime(), default=datetime.utcnow)

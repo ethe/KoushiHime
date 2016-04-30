@@ -1,12 +1,17 @@
 # -*- coding: utf-8 -*-
 
 from datetime import datetime
-from models import Entry
-from moegirl.utils import Pagination
+from models import WaitingList
+from form import PushForm
+from utils import recent_have_pushed, have_auto_catched
+from koushinn.utils import Pagination
+from koushinn.utils.moegirl import MoegirlQuery
 from flask.views import MethodView
 from flask.ext.login import current_user
+from koushinn.auth.models import UserOpration
+from koushinn.auth.constants import Permission, Opration
 from flask.ext.paginate import Pagination as PaginationBar
-from flask import render_template, login_required, redirect, url_for, request, jsonify
+from flask import render_template, login_required, redirect, url_for, request, jsonify, flash, current_app
 
 
 class Index(MethodView):
@@ -22,7 +27,7 @@ class Update(MethodView):
 
     def get(self, page):
         per_page = 10
-        unpushed_entry = Entry.query.filter_by(is_pushed=False)
+        unpushed_entry = WaitingList.query.order_by(WaitingList.id).all()
         pagination = Pagination(unpushed_entry, per_page)
         current_page = pagination.page(page)
         foot_bar = PaginationBar(css_framework='bootstrap3', link_size='sm',
@@ -43,12 +48,19 @@ class Update(MethodView):
     def post(self):
         data = request.get_json()
         if data['action'] == 'post':
-            # handling_title = data["title"]
-            # 立即推送
-            pass
+            title = data["title"]
+            current_weight = current_app.config["CUTTING_WEIGHT_INIT"]
+            entry = WaitingList.query.filter_by(title=title).first()
+            if entry:
+                entry.cutting_weight = current_weight + 1  # FIXME: 即使条目处于权重最高状态亦可增加权限
+                entry.save()
+                current_app.config["CUTTING_WEIGHT_INIT"] += 1
         elif data['action'] == 'del':
-            # 标记为删除
-            pass
+            title = data['title']
+            UserOpration(user_id=current_user.id, opration=Opration.DELETE, title=title).save()
+            query = WaitingList.query.filter_by(title=data['title']).first()
+            if query:
+                query.delete()
         response = jsonify({'result': True})
         return response
 
@@ -56,8 +68,38 @@ class Update(MethodView):
 class ManualUpdate(MethodView):
     decorators = [login_required]
 
+    def __init__(self):
+        self.form = PushForm
+
     def get(self):
-        pass
+        return render_template('mupdate.html', form=self.form(), pushtime=10)
+
+    def post(self):
+        if current_user.can(Permission.MANUEL_PUSH):
+            form = self.form(request.form)
+            if form.validate():
+                title = form.pushtitle.data
+                moegirl_entry = MoegirlQuery(title)
+                namespace = moegirl_entry.get_namespace()
+                if namespace is 0:
+                    has_been_baned = moegirl_entry.banned_moegirl_category(title)
+                    has_pushed = recent_have_pushed(title)  # TODO: 改成自动冒泡
+                    has_catched = have_auto_catched(title)
+                    # TODO: 推送检查是否被正则ban掉
+                    if has_been_baned is True and has_pushed is False and has_catched is False:
+                        WaitingList(title=title).save()
+                        UserOpration(user_id=current_user.id, title=title).save()
+                        flash(u"操作成功，词条将在下一次推送中推送")
+                    else:
+                        flash(u"推送条目被ban，或者已经在24小时之内推送过，或者已经被更新姬捕捉进精灵求")
+                else:
+                    flash(u"错误-条目不在主名字空间")
+            else:
+                flash(u"条目格式有问题，请检查并重新添些")
+        else:
+            flash(u"你没有权限")
+            return redirect(url_for('main.mupdate'))
+
 
 
 

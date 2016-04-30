@@ -1,6 +1,6 @@
 # -*- coding:utf-8 -*-
 
-from moegirl import db
+from koushinn import db
 
 
 class CRUDMixin(object):
@@ -20,7 +20,7 @@ class CRUDMixin(object):
     def delete(self, sign='delete'):
         """Delete the object from the database."""
         if hasattr(self, sign):
-            self.deleted = True
+            self.delete = True
             db.session.add(self)
         else:
             db.session.delete(self)

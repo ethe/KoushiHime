@@ -14,6 +14,9 @@ class Config:
     SQLALCHEMY_COMMIT_ON_TEARDOWN = True  # 在每次会话被销毁前自动commit未commit的会话
     SQLALCHEMY_TRACK_MODIFICATIONS = True  # flask-sqlalchemy将追踪orm对象变化并发送信号
 
+    MOEGIRL_API_ROOT = "https://zh.moegirl.org/api.php"
+    CUTTING_WEIGHT_INIT = 0  # 插队权重初始化
+
     @staticmethod
     def init_app(app):  #: 初始化
         configure_errorhandlers(app)

@@ -1,6 +1,6 @@
 # -*- coding:utf-8 -*-
 
-from moegirl.auth import auth
+from koushinn.auth import auth
 from views import Login, Logout
 
 

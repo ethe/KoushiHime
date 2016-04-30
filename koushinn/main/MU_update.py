@@ -77,7 +77,7 @@ def ForbiddenItemsFilter(item):
             return False
             break
     return True
-    
+
 def ForbiddenItemPushed(title):
     keys = r.hkeys('queue')
     if MU_MainConfig.PUSHEDPREFIX+title in keys:
@@ -223,7 +223,7 @@ class MU_UpdateData(object):
                 ToBeSendImage=r.hget('img',MU_MainConfig.EDITEDPREFIX+self.cache[i])
                 r.zadd('queuenumber',ToBeSendTitle,i)
                 r.zincrby('queuenumber',ToBeSendTitle,1)
-                r.hset('imgkey',ToBeSendTitle,ToBeSendImage)        
+                r.hset('imgkey',ToBeSendTitle,ToBeSendImage)
     def PostItem(self):
         Keys=r.zrange('queuenumber',0,-1)
         ReadyToPostItem=Keys[0]
