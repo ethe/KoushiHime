@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
 from datetime import datetime
-from koushinn import db
-from koushinn.utils import CRUDMixin
+from koushihime import db
+from koushihime.utils import CRUDMixin
 
 
 class PushRecord(db.Model, CRUDMixin):

@@ -17,6 +17,16 @@ class Config:
     MOEGIRL_API_ROOT = "https://zh.moegirl.org/api.php"
     CUTTING_WEIGHT_INIT = 0  # 插队权重初始化
 
+    WEIBO_AUTH_CONFIG = os.environ.get('SECRET_KEY') or {  # 微博登录验证配置
+        'APP_KEY': '563928974',
+        'APP_SECRET': '',
+        'PUSHEDPREFIX': 'PUSHED-',
+        'EDITEDPREFIX': 'EDITED-',
+        'EXPIRETIME': '72*3600',
+        'THREEDAYS': 259200,
+        'Code': '7581b56419b5ea52abc39c0f282716e6'
+    }
+
     @staticmethod
     def init_app(app):  #: 初始化
         configure_errorhandlers(app)

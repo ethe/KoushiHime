@@ -1,6 +1,6 @@
 # -*- coding:utf-8 -*-
 
-from koushinn.auth import auth
+from koushihime.auth import auth
 from views import Login, Logout
 
 

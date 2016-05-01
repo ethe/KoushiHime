@@ -1,6 +1,6 @@
 # -*- coding:utf-8 -*-
 
-from koushinn.main import main
+from koushihime.main import main
 from views import Index, Update, UserInfo, UserList, EditProfile, OperationLog
 
 

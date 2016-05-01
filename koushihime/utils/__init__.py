@@ -2,10 +2,10 @@
 
 import functools
 from math import ceil
-from koushinn import db
+from koushihime import db
 from flask import abort
 from flask.ext.login import current_user
-from koushinn.auth.constants import Permission
+from koushihime.auth.constants import Permission
 
 
 def admin_required():

@@ -1,7 +1,7 @@
 # -*- coding:utf-8 -*-
 
 import datetime
-from koushinn.main.models import PushRecord, WaitingList
+from koushihime.main.models import PushRecord, WaitingList
 
 
 def recent_have_pushed(title, hours=24):

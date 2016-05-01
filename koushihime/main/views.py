@@ -5,10 +5,10 @@ from flask.views import MethodView
 from flask.ext.login import current_user, login_required
 from flask.ext.paginate import Pagination as PaginationBar
 from flask import render_template, redirect, url_for, request, jsonify, flash, current_app, abort
-from koushinn.auth.models import UserOperation, User, Role
-from koushinn.auth.constants import Permission, Operation
-from koushinn.utils import Pagination, admin_required
-from koushinn.utils.moegirl import MoegirlQuery
+from koushihime.auth.models import UserOperation, User, Role
+from koushihime.auth.constants import Permission, Operation
+from koushihime.utils import Pagination, admin_required
+from koushihime.utils.moegirl import MoegirlQuery
 from utils import recent_have_pushed, have_auto_catched
 from models import WaitingList, BanList
 from form import PushForm, AddUserForm, EditProfileForm, AdminEditProfileForm, BanKeywordForm
@@ -172,7 +172,6 @@ class EditProfile(MethodView):
 
     def get(self, username):
         if not username:  # 用户访问自己的个人信息编辑页
-            user_info = current_user
             form = self.form()
             form.email.data = current_user.email
             form.about_me.data = current_user.aboutme
@@ -232,9 +231,9 @@ class OperationLog(MethodView):
         count = UserOperation.query.count()
         query = UserOperation.query.order_by(UserOperation.id.desc())\
                                   .paginate(page=page, per_page=per_page, error_out=False)
-        foot_bar = Pagination(css_framework='bootstrap3', link_size='sm',
-                              show_single_page=False, page=page, per_page=per_page,
-                              total=count, format_total=True, format_number=True)
+        foot_bar = PaginationBar(css_framework='bootstrap3', link_size='sm',
+                                 show_single_page=False, page=page, per_page=per_page,
+                                 total=count, format_total=True, format_number=True)
         return render_template('log.html', records=query.items,
                                 page=page, per_page=per_page, pagination=foot_bar)
 
@@ -250,9 +249,9 @@ class Ban(MethodView):
         count = BanList.query.count()
         pagination = BanList.query.filter_by(delete=False)\
                                   .paginate(page=page, per_page=per_page, error_out=False)  # TODO: 把关键词读入配置减少查询次数
-        foot_bar = Pagination(css_framework='bootstrap3', link_size='sm',
-                              show_single_page=False, page=page, per_page=per_page,
-                              total=count, format_total=True, format_number=True)
+        foot_bar = PaginationBar(css_framework='bootstrap3', link_size='sm',
+                                 show_single_page=False, page=page, per_page=per_page,
+                                 total=count, format_total=True, format_number=True)
         template_param = {
             'keywords': pagination,
             'page': page,
@@ -280,6 +279,13 @@ class Ban(MethodView):
                     ban.save()
                     flash(u'添加关键词成功')
         return redirect(url_for('main.ban'))
+
+
+class WeiboAuthCallback(MethodView):
+
+    def get(self):
+        auth_code = request.args.get("code")
+
 
 
 @main.route('/code')

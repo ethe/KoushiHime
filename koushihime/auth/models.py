@@ -3,8 +3,8 @@
 from datetime import datetime
 from flask.ext.login import UserMixin
 from constants import Permission
-from koushinn import db, login_manager
-from koushinn.utils import CRUDMixin
+from koushihime import db, login_manager
+from koushihime.utils import CRUDMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 
 

@@ -3,8 +3,8 @@
 注册蓝图
 """
 
-# from koushinn.main import main as main_blueprint
-from koushinn.auth import auth as auth_blueprint
+# from koushihime.main import main as main_blueprint
+from koushihime.auth import auth as auth_blueprint
 
 
 def regist(app):
