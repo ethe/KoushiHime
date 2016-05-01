@@ -25,9 +25,9 @@ class Login(MethodView):
     def post(self):
         form = self.form(request.form)
         if form.validate():
-            username = form.username.data
+            email = form.email.data
             try:
-                user = User.query.filter_by(username=username).first()
+                user = User.query.filter_by(email=email).first()
             except Exception, e:
                 flash(u"程序内部错误，看见此条信息请尝试刷新或联系管理员")
                 raise e

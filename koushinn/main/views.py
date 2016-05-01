@@ -8,10 +8,10 @@ from koushinn.utils import Pagination
 from koushinn.utils.moegirl import MoegirlQuery
 from flask.views import MethodView
 from flask.ext.login import current_user
-from koushinn.auth.models import UserOpration
+from koushinn.auth.models import UserOpration, User
 from koushinn.auth.constants import Permission, Opration
 from flask.ext.paginate import Pagination as PaginationBar
-from flask import render_template, login_required, redirect, url_for, request, jsonify, flash, current_app
+from flask import render_template, login_required, redirect, url_for, request, jsonify, flash, current_app, abort
 
 
 class Index(MethodView):
@@ -101,54 +101,18 @@ class ManualUpdate(MethodView):
             return redirect(url_for('main.mupdate'))
 
 
+class UserInfo(MethodView):
+    decorators = [login_required]
 
-
-@main.route('/mupdate', methods=['GET', 'POST'])
-@login_required
-def mupdate():
-    p = Page()
-    u = User()
-    pushtime = u.GetPushtime(g.user)
-    deltime = u.GetDeltime(g.user)
-    form = PushForm(request.form)
-    if request.method == 'POST' and form.validate():
-        if pushtime is not '0':
-            title = form.pushtitle.data
-            ns = GetNamespace(title)
-            if ns is 0:
-                forbiddenflag = ForbiddenItemsFilter(title)
-                pushedflag = ForbiddenItemPushed(title)
-                getflag = ForbiddenItemGet(title)
-                if forbiddenflag is True and pushedflag is True and getflag is True:
-                    flag = p.Add(title)
-                    if flag is True:
-                        p.RecordUpdate(title, current_user.id, '手动推送')
-                        flash('推送成功，本条目将在下一次推送时被推送')
-                        return redirect('/mupdate')
-                    else:
-                        flash('错误-条目图片不符合要求')
-                else:
-                    flash('错误-条目被屏蔽推送或已被更新姬自动获取')
-            else:
-                flash('错误-条目不在主名字空间')
+    def get(self, user_id):
+        is_admin = current_user.can(Permission.ADMINISTER)
+        if current_user.id == user_id or is_admin is True:
+            user_info = User.query.get(int(user_id))
+            if not user_info:
+                abort(404)
+            return render_template('user.html', u=user_info, username=user_info.username)
         else:
-            flash('错误-请检查本日推送次数')
-    return render_template('mupdate.html', form=form, pushtime=pushtime)
-
-
-@main.route('/user/<username>')
-@login_required
-def user(username):
-    u = User()
-    adminflag = current_user.is_administrator(g.user)
-    if g.user == username or adminflag is True:
-        flag = u.CheckUser(username)
-        if flag is False:
-            abort(404)
-        u.GetUserInfo(username)
-        return render_template('user.html', u=u, username=username)
-    else:
-        abort(403)
+            abort(403)
 
 
 @main.route('/userlist', methods=['GET', 'POST'])

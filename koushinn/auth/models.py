@@ -4,16 +4,16 @@ from datetime import datetime
 from flask.ext.login import UserMixin
 from constants import Permission
 from koushinn import db, login_manager
-from koushinn.utils.database import CRUDMixin
+from koushinn.utils import CRUDMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 
 
 @login_manager.user_loader
-def load_user(user_id):
+def load_user(email):
     """
     flask-login 要求完成的方法
     """
-    return User.query.get(int(user_id))
+    return User.query.filter_by(email=email)
 
 
 class Role(db.Model, CRUDMixin):
@@ -31,7 +31,7 @@ class Role(db.Model, CRUDMixin):
     def init_roles():
         roles = {
             'Blocked': Permission.BLOCKED,
-            'Rounder': Permission.READ | Permission.MANUEL_PUSH,
+            'Watchman': Permission.READ | Permission.MANUEL_PUSH,
             'Administrator': 0xff
         }
         for r in roles:
@@ -50,11 +50,12 @@ class User(UserMixin, db.Model, CRUDMixin):
     __tablename__ = 'users'
 
     id = db.Column(db.Integer(), primary_key=True)
+    email = db.Column(db.String(64), unique=True)
     username = db.Column(db.String(64), unique=True, index=True)
     role_id = db.Column(db.Integer, db.ForeignKey('roles.id'))
     push_records = db.relationship('UserOpration', backref='handlers', lazy='dynamic')
     password_hash = db.Column(db.String(128))
-    about_me = db.Column(db.Text())
+    aboutme = db.Column(db.Text())
     member_since = db.Column(db.DateTime(), default=datetime.utcnow)
     last_seen = db.Column(db.DateTime(), default=datetime.utcnow)
 
@@ -78,7 +79,7 @@ class User(UserMixin, db.Model, CRUDMixin):
         if new_email:
             self.email = new_email
         if new_aboutme:
-            self.about_me = new_aboutme
+            self.aboutme = new_aboutme
         db.session.add(self)
         return True
 

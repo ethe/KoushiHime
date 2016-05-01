@@ -17,7 +17,3 @@ def have_auto_catched(title):
     if query.exists():
         return True
     return False
-
-
-def has_been_baned(title):
-

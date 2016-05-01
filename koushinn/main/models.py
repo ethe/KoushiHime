@@ -2,7 +2,7 @@
 
 from datetime import datetime
 from koushinn import db
-from koushinn.utils.database import CRUDMixin
+from koushinn.utils import CRUDMixin
 
 
 class PushRecord(db.Model, CRUDMixin):
