@@ -1,24 +1,24 @@
 # -*- coding: utf-8 -*-
 
 from datetime import datetime
-from models import WaitingList
-from form import PushForm, AddUserForm, EditProfileForm, AdminEditProfileForm
-from utils import recent_have_pushed, have_auto_catched
-from koushinn.utils import Pagination
-from koushinn.utils.moegirl import MoegirlQuery
 from flask.views import MethodView
 from flask.ext.login import current_user
-from koushinn.auth.models import UserOpration, User, Role
-from koushinn.auth.constants import Permission, Opration
 from flask.ext.paginate import Pagination as PaginationBar
 from flask import render_template, login_required, redirect, url_for, request, jsonify, flash, current_app, abort
+from koushinn.auth.models import UserOpration, User, Role
+from koushinn.auth.constants import Permission, Opration
+from koushinn.utils import Pagination, admin_required
+from koushinn.utils.moegirl import MoegirlQuery
+from utils import recent_have_pushed, have_auto_catched
+from models import WaitingList, BanList
+from form import PushForm, AddUserForm, EditProfileForm, AdminEditProfileForm, BanKeywordForm
 
 
 class Index(MethodView):
 
     def get(self):
         if not current_user:
-            redirect(url_for("auth.login"))
+            return redirect(url_for("auth.login"))
         return render_template('index.html')
 
 
@@ -45,7 +45,7 @@ class Update(MethodView):
         }
         return render_template('update.html', **result)
 
-    def post(self):
+    def post(self, page):
         data = request.get_json()
         if data['action'] == 'post':
             title = data["title"]
@@ -110,10 +110,10 @@ class ManualUpdate(MethodView):
 class UserInfo(MethodView):
     decorators = [login_required]
 
-    def get(self, user_id):
+    def get(self, username):
         is_admin = current_user.can(Permission.ADMINISTER)
-        if current_user.id == user_id or is_admin is True:
-            user_info = User.query.get(int(user_id))
+        if current_user.username == username or is_admin is True:
+            user_info = User.query.query.filter_by(username=username, deleted=False).first()
             if not user_info:
                 abort(404)
             return render_template('user.html', u=user_info, username=user_info.username)
@@ -122,28 +122,25 @@ class UserInfo(MethodView):
 
 
 class UserList(MethodView):
-    decorators = [login_required]
+    decorators = [login_required, admin_required]
 
     def __init__(self):
         self.form = AddUserForm
 
     def get(self):
-        if current_user.can(Permission.ADMINISTER):
-            userlist = User.query.all()
-            return render_template('userlist.html', userlist=userlist, form=self.form())
-        else:
-            abort(403)
+        userlist = User.query.filter_by(deleted=False).all()
+        return render_template('userlist.html', userlist=userlist, form=self.form())
 
     def post(self):
         data = request.get_json()
         if data:
             if data['action'] == 'edit':
                 username = data['username']
-                return redirect(url_for('main.admin_edit_profile'), username=username)
+                return redirect(url_for('main.editprofile'), username=username)
             else:
                 username = data['username']
                 try:
-                    User.query.filter_by(username=username).first().delete()
+                    User.query.filter_by(username=username, deleted=False).first().delete()
                 except:
                     flash(u'用户不存在')
         elif request.form:
@@ -155,11 +152,15 @@ class UserList(MethodView):
         if form.validate():
             role = Role.query.filter_by(name=form.role.data).first()
             if role:
-                user = User(email=form.email.data, username=form.username.data,
-                            role=role, password=form.password.data)
-                user.save()
+                if not user.query.filter_by(email=form.email.data).exists():
+                    user = User(email=form.email.data, username=form.username.data,
+                                role=role, password=form.password.data)
+                    user.save()
+                else:
+                    flash(u'已经存在该用户')
             else:
                 flash(u'不存在该用户组')
+        return redirect(url_for('main.userlist'))
 
 
 class EditProfile(MethodView):
@@ -169,86 +170,116 @@ class EditProfile(MethodView):
         self.form = EditProfileForm
         self.admin_form = AdminEditProfileForm
 
-    def get(self):
-        pass
-
-
-@main.route('/edit_profile', methods=['GET', 'POST'])
-@login_required
-def edit_profile():
-    form = EditProfileForm()
-    u = User()
-    if request.method == 'POST' and form.validate():
-        pwd = u.GetPassword(g.user)
-        if u.verify_password(form.oripassword.data):
-            email = form.email.data
-            aboutme = form.about_me.data
-            if form.password.data is not u'':
-                u.ChangePassword(g.user, form.password.data)
-            u.ChangeProfile(g.user, email, aboutme)
-            flash('成功更新资料')
-            return redirect(url_for('.user', username=g.user))
+    def get(self, username):
+        if not username:  # 用户访问自己的个人信息编辑页
+            user_info = current_user
+            form = self.form()
+            form.email.data = current_user.email
+            form.about_me.data = current_user.aboutme
         else:
-            flash('原密码输入错误！')
-    u.GetUserInfo(g.user)
-    form.email.data = u.email
-    form.about_me.data = u.aboutme
-    return render_template('edit_profile.html', form=form, u=u)
-
-
-@main.route('/edit_profile/<username>', methods=['GET', 'POST'])
-@login_required
-def admin_edit_profile(username):
-    u = User()
-    form = AdminEditProfileForm()
-    flag = current_user.is_administrator(g.user)
-    if request.method == 'POST' and form.validate():
-        if flag is True:
-            pwd = u.GetPassword(g.user)
-            if u.verify_password(form.oripassword.data):
-                email = form.email.data
-                aboutme = form.about_me.data
-                role = form.role.data
-                if form.password.data is not u'':
-                    u.ChangePassword(username, form.password.data)
-                u.AdminChangeProfile(username, email, role, aboutme)
-                flash('成功更新资料')
-                return redirect(url_for('.user', username=username))
+            if current_user.can(Permission.ADMINISTER):
+                user_info = User.query.filter_by(username=username, deleted=False).first()
+                if user_info:
+                    form = self.admin_form()
+                    form.email.data = user_info.email
+                    form.about_me.data = user_info.aboutme
+                    form.role.data = user_info.role.name
+                else:
+                    flash(u'用户不存在')
+                    return redirect(url_for('main.index'))
             else:
-                flash('管理员密码输入错误！')
+                abort(403)
+        return render_template('edit_profile.html', form=self.form(), u=current_user)
+
+    def post(self, username):
+        if not username:
+            form = self.form(request.form)
+            user = current_user
         else:
-            abort(403)
-    u.GetUserInfo(username)
-    form.email.data = u.email
-    form.about_me.data = u.aboutme
-    form.role.data = u.role
-    return render_template('admin_edit_profile.html', form=form, u=u)
+            if current_user.can(Permission.ADMINISTER):
+                form = self.form(request.form)
+                user = User.query.filter_by(username=username, deleted=False).first()
+                if user:
+                    if not current_user.verify_password(form.oripassword.data):
+                        flash(u'管理员密码输入错误')
+                        return redirect(url_for('main.editprofile', username=username))
+                else:
+                    flash(u'用户不存在')
+                    return redirect(url_for('main.index'))
+            else:
+                abort(403)
+
+        self.change_profile(user, form, True if username else False)
+        return redirect(url_for('main.user', username=username))
+
+    @staticmethod
+    def change_profile(user, form, admin=False):
+        user.password = form.password.data
+        user.email = form.email.data
+        user.aboutme = form.about_me.data
+        if admin:
+            new_role = Role.query.filter_by(name=form.role.data)
+            if new_role:
+                user.role = new_role
+        user.save()
 
 
-@main.route('/log')
-@login_required
-def log():
-    flag = current_user.is_administrator(g.user)
-    if flag is True:
-        p = Page()
-        record = p.GetRecord()
-        records = {}
-        records = OrderedDict()
-        total = len(record)
-        page = request.args.get('page', 1, type=int)
+class OprationLog(MethodView):
+    decorators = [login_required, admin_required]
+
+    def get(self, page):
         per_page = 10
-        keys = record.keys()
-        offset = (page - 1) * per_page
-        for i in range(len(keys)):
-            if i < per_page and (offset + i) < len(keys):
-                records[keys[offset + i]] = record[keys[offset + i]]
+        count = UserOpration.query.count()
+        query = UserOpration.query.order_by(UserOpration.id.desc())\
+                                  .paginate(page=page, per_page=per_page, error_out=False)
+        foot_bar = Pagination(css_framework='bootstrap3', link_size='sm',
+                              show_single_page=False, page=page, per_page=per_page,
+                              total=count, format_total=True, format_number=True)
+        return render_template('log.html', records=query.items,
+                                page=page, per_page=per_page, pagination=foot_bar)
+
+
+class Ban(MethodView):
+    decorators = [login_required, admin_required]
+
+    def __init__(self):
+        self.form = BanKeywordForm
+
+    def get(self, page):
+        per_page = 10
+        count = BanList.query.count()
+        pagination = BanList.query.filter_by(deleted=False)\
+                                  .paginate(page=page, per_page=per_page, error_out=False)  # TODO: 把关键词读入配置减少查询次数
+        foot_bar = Pagination(css_framework='bootstrap3', link_size='sm',
+                              show_single_page=False, page=page, per_page=per_page,
+                              total=count, format_total=True, format_number=True)
+        template_param = {
+            'keywords': pagination,
+            'page': page,
+            'per_page': per_page,
+            'pagination': foot_bar,
+            'form': self.form()
+        }
+        return render_template('ban.html', **template_param)
+
+    def post(self):
+        data = request.get_json()
+        if data:
+            keyword = data['keyword']
+            result = BanList.query.filter_by(rule=keyword).first()
+            if result:
+                result.delete()
+                flash(u'成功删除关键词')
             else:
-                break
-        pagination = Pagination(css_framework='bootstrap3', link_size='sm', show_single_page=False,
-                                page=page, per_page=per_page, total=total, format_total=True, format_number=True)
-        return render_template('log.html', records=records, page=page, per_page=per_page, pagination=pagination)
-    else:
-        abort(403)
+                flash(u'该关键词不存在')
+        elif request.form:
+            form = self.form(request.form)
+            if form.validate():
+                if not BanList.query.filter_by(rule=form.keyword.data).exists():
+                    ban = BanList(rule=form.keyword.data)
+                    ban.save()
+                    flash(u'添加关键词成功')
+        return redirect(url_for('main.ban'))
 
 
 @main.route('/ban', methods=['GET', 'POST'])

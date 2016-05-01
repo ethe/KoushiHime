@@ -1,7 +1,22 @@
 # -*- coding:utf-8 -*-
 
+import functools
 from math import ceil
 from koushinn import db
+from flask import abort
+from flask.ext.login import current_user
+from koushinn.auth.constants import Permission
+
+
+def admin_required():
+    def decorator(func):
+        @functools.wraps(func)
+        def wrapper(*args, **kw):
+            if not current_user.can(Permission.ADMINISTER):
+                abort(403)
+            return func(*args, **kw)
+        return wrapper
+    return decorator
 
 
 class CRUDMixin(object):

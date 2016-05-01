@@ -15,3 +15,6 @@ class Opration:
     BAN = 1
     DELETE = 2
     PUSH = 3
+
+    def translate(opration):
+        return [u'屏蔽', u'推送', u'删除'][opration]

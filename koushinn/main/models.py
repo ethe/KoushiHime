@@ -13,7 +13,7 @@ class PushRecord(db.Model, CRUDMixin):
     is_auto = db.Column(db.Boolean(), default=True)
     created_time = db.Column(db.DateTime(), default=datetime.utcnow)
     pushed_time = db.Column(db.DateTime(), nullable=True, default=None)
-    delete = db.Column(db.Boolean(), default=False)
+    deleted = db.Column(db.Boolean(), default=False)
     is_success = db.Column(db.Boolean(), default=True)
 
 
@@ -26,3 +26,12 @@ class WaitingList(db.Model, CRUDMixin):
     plan_time = db.Column(db.DateTime(), nullable=True, default=None)
     created_time = db.Column(db.DateTime(), default=datetime.utcnow)
     cutting_weight = db.Column(db.SmallInteger(), default=0)
+
+
+class BanList(db.Model, CRUDMixin):
+    __tablename__ = 'wating_list'
+
+    id = db.Column(db.Integer(), primary_key=True)
+    rule = db.Column(db.Text(), unique=True)
+    deleted = db.Column(db.Boolean(), default=False)
+    created_time = db.Column(db.DateTime(), default=datetime.utcnow)
