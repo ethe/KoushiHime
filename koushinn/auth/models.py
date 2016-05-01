@@ -9,11 +9,11 @@ from werkzeug.security import generate_password_hash, check_password_hash
 
 
 @login_manager.user_loader
-def load_user(email):
+def load_user(user_id):
     """
     flask-login 要求完成的方法
     """
-    return User.query.filter_by(email=email)
+    return User.query.get(int(user_id))
 
 
 class Role(db.Model, CRUDMixin):
@@ -58,6 +58,7 @@ class User(UserMixin, db.Model, CRUDMixin):
     aboutme = db.Column(db.Text())
     member_since = db.Column(db.DateTime(), default=datetime.utcnow)
     last_seen = db.Column(db.DateTime(), default=datetime.utcnow)
+    deleted = db.Column(db.Boolean(), default=False)
 
     @property
     def password(self):

@@ -2,13 +2,13 @@
 
 from datetime import datetime
 from models import WaitingList
-from form import PushForm
+from form import PushForm, AddUserForm
 from utils import recent_have_pushed, have_auto_catched
 from koushinn.utils import Pagination
 from koushinn.utils.moegirl import MoegirlQuery
 from flask.views import MethodView
 from flask.ext.login import current_user
-from koushinn.auth.models import UserOpration, User
+from koushinn.auth.models import UserOpration, User, Role
 from koushinn.auth.constants import Permission, Opration
 from flask.ext.paginate import Pagination as PaginationBar
 from flask import render_template, login_required, redirect, url_for, request, jsonify, flash, current_app, abort
@@ -113,6 +113,43 @@ class UserInfo(MethodView):
             return render_template('user.html', u=user_info, username=user_info.username)
         else:
             abort(403)
+
+
+class UserList(MethodView):
+    decorators = [login_required]
+
+    def __init__(self):
+        self.form = AddUserForm
+
+    def get(self):
+        if current_user.can(Permission.ADMINISTER):
+            return render_template('userlist.html', userlist=userlist, form=self.form())
+        else:
+            abort(403)
+
+    def post(self):
+        data = request.get_json()
+        if data:
+            if data['action'] == 'edit':
+                username = data['username']
+                return redirect(url_for('main.admin_edit_profile'), username=username)
+            else:
+                username = data['username']
+                try:
+                    User.query.filter_by(username=username).first().delete()
+                except:
+                    flash(u'用户不存在')
+        elif request.form:
+            form = self.form(request.form)
+            if form.validate():
+                role = Role.query.filter_by(name=form.role.data).first()
+                if role:
+                    user = User(email=form.email.data, username=form.username.data,
+                                role=role, password=form.password.data)
+                    user.save()
+                else:
+                    flash(u'不存在该用户组')
+        return redirect('userlist')
 
 
 @main.route('/userlist', methods=['GET', 'POST'])

@@ -31,7 +31,7 @@ class AddUserForm(Form):
 
     def __init__(self, *args, **kwargs):
         super(AddUserForm, self).__init__(*args, **kwargs)
-        self.role.choices = [(u'管理员', u'管理员'), (u'巡察姬', u'巡察姬')]
+        self.role.choices = [('Administrator', u'管理员'), ('Watchman', u'巡察姬')]
 
 
 class AdminEditProfileForm(Form):
@@ -46,7 +46,7 @@ class AdminEditProfileForm(Form):
 
     def __init__(self, *args, **kwargs):
         super(AdminEditProfileForm, self).__init__(*args, **kwargs)
-        self.role.choices = [(u'管理员', u'管理员'), (u'巡察姬', u'巡察姬'), (u'封禁', u'封禁')]
+        self.role.choices = [('Administrator', u'管理员'), ('Watchman', u'巡察姬'), ('Blocked', u'封禁')]
 
 
 class BanKeywordForm(Form):
