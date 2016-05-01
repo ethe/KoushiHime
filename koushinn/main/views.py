@@ -2,9 +2,9 @@
 
 from datetime import datetime
 from flask.views import MethodView
-from flask.ext.login import current_user
+from flask.ext.login import current_user, login_required
 from flask.ext.paginate import Pagination as PaginationBar
-from flask import render_template, login_required, redirect, url_for, request, jsonify, flash, current_app, abort
+from flask import render_template, redirect, url_for, request, jsonify, flash, current_app, abort
 from koushinn.auth.models import UserOpration, User, Role
 from koushinn.auth.constants import Permission, Opration
 from koushinn.utils import Pagination, admin_required
@@ -97,7 +97,7 @@ class ManualUpdate(MethodView):
         moegirl_entry = MoegirlQuery(title)
         namespace = moegirl_entry.get_namespace()
         if namespace is 0:
-            baned_from_moegirl = moegirl_entry.banned_moegirl_category(title)
+            baned_from_moegirl = moegirl_entry.banned_moegirl_category()
             has_pushed = recent_have_pushed(title)  # TODO: 改成自动冒泡
             has_catched = have_auto_catched(title)
             # TODO: 推送检查是否被正则ban掉
@@ -152,7 +152,7 @@ class UserList(MethodView):
         if form.validate():
             role = Role.query.filter_by(name=form.role.data).first()
             if role:
-                if not user.query.filter_by(email=form.email.data).exists():
+                if not User.query.filter_by(email=form.email.data).exists():
                     user = User(email=form.email.data, username=form.username.data,
                                 role=role, password=form.password.data)
                     user.save()
@@ -280,44 +280,6 @@ class Ban(MethodView):
                     ban.save()
                     flash(u'添加关键词成功')
         return redirect(url_for('main.ban'))
-
-
-@main.route('/ban', methods=['GET', 'POST'])
-@login_required
-def ban():
-    flag = current_user.is_administrator(g.user)
-    if flag is True:
-        form = BanKeywordForm()
-        p = Page()
-        jsondata = request.get_json()
-        if request.method == 'POST':
-            if jsondata:
-                keyword = jsondata['keyword']
-                p.DelBan(keyword)
-                flash('成功删除关键词')
-                location = url_for('.ban')
-                return jsonify({"status": 302, "location": location})
-            if form.validate():
-                keyword = form.keyword.data
-                p.AddBan(keyword)
-                flash('成功添加关键词')
-                return redirect('ban')
-        banlist = p.GetBan()
-        keywords = []
-        total = len(banlist)
-        page = request.args.get('page', 1, type=int)
-        per_page = 10
-        offset = (page - 1) * per_page
-        for i in range(len(banlist)):
-            if i < per_page and (offset + i) < len(banlist):
-                keywords.append(banlist[offset + i])
-            else:
-                break
-        pagination = Pagination(css_framework='bootstrap3', link_size='sm', show_single_page=False,
-                                page=page, per_page=per_page, total=total, format_total=True, format_number=True)
-        return render_template('ban.html', keywords=keywords, page=page, per_page=per_page, pagination=pagination, form=form)
-    else:
-        abort(403)
 
 
 @main.route('/code')

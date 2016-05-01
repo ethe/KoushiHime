@@ -36,7 +36,7 @@ class Login(MethodView):
                 flash(u"程序内部错误，看见此条信息请尝试刷新或联系管理员")
                 raise e
             if user is not None and user.verify_password(form.password.data):
-                login_user(user, form.remember_me.data)
+                login_user(user, form.remember.data)
                 return redirect(request.args.get('next') or url_for('main.index'))
             flash(u"用户名或密码不正确")
         return render_template('auth/login.html', form=form)
@@ -45,7 +45,7 @@ class Login(MethodView):
 class Logout(MethodView):
     decorators = [login_required]
 
-    def get():
+    def get(self):
         logout_user()
         flash(u"已登出")
         return redirect(url_for('main.index'))
