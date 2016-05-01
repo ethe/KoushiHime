@@ -36,7 +36,7 @@ class CRUDMixin(object):
     def delete(self, sign='delete'):
         """Delete the object from the database."""
         if hasattr(self, sign):
-            self.delete = True
+            self.sign = True
             db.session.add(self)
         else:
             db.session.delete(self)

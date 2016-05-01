@@ -5,8 +5,8 @@ from flask.views import MethodView
 from flask.ext.login import current_user, login_required
 from flask.ext.paginate import Pagination as PaginationBar
 from flask import render_template, redirect, url_for, request, jsonify, flash, current_app, abort
-from koushinn.auth.models import UserOpration, User, Role
-from koushinn.auth.constants import Permission, Opration
+from koushinn.auth.models import UserOperation, User, Role
+from koushinn.auth.constants import Permission, Operation
 from koushinn.utils import Pagination, admin_required
 from koushinn.utils.moegirl import MoegirlQuery
 from utils import recent_have_pushed, have_auto_catched
@@ -57,7 +57,7 @@ class Update(MethodView):
                 current_app.config["CUTTING_WEIGHT_INIT"] += 1
         elif data['action'] == 'del':
             title = data['title']
-            UserOpration(user_id=current_user.id, opration=Opration.DELETE, title=title).save()
+            UserOperation(user_id=current_user.id, operation=Operation.DELETE, title=title).save()
             query = WaitingList.query.filter_by(title=data['title']).first()
             if query:
                 query.delete()
@@ -82,7 +82,7 @@ class ManualUpdate(MethodView):
                 result = self.check_push_validate(title)
                 if result:
                     WaitingList(title=title).save()
-                    UserOpration(user_id=current_user.id, title=title).save()
+                    UserOperation(user_id=current_user.id, title=title).save()
                     flash(u"操作成功，词条将在下一次推送中推送")
                 else:
                     flash(u"推送条目被ban，或者已经在24小时之内推送过，或者已经被更新姬捕捉进精灵球")
@@ -113,7 +113,7 @@ class UserInfo(MethodView):
     def get(self, username):
         is_admin = current_user.can(Permission.ADMINISTER)
         if current_user.username == username or is_admin is True:
-            user_info = User.query.query.filter_by(username=username, deleted=False).first()
+            user_info = User.query.query.filter_by(username=username, delete=False).first()
             if not user_info:
                 abort(404)
             return render_template('user.html', u=user_info, username=user_info.username)
@@ -128,7 +128,7 @@ class UserList(MethodView):
         self.form = AddUserForm
 
     def get(self):
-        userlist = User.query.filter_by(deleted=False).all()
+        userlist = User.query.filter_by(delete=False).all()
         return render_template('userlist.html', userlist=userlist, form=self.form())
 
     def post(self):
@@ -140,7 +140,7 @@ class UserList(MethodView):
             else:
                 username = data['username']
                 try:
-                    User.query.filter_by(username=username, deleted=False).first().delete()
+                    User.query.filter_by(username=username, delete=False).first().delete()
                 except:
                     flash(u'用户不存在')
         elif request.form:
@@ -178,7 +178,7 @@ class EditProfile(MethodView):
             form.about_me.data = current_user.aboutme
         else:
             if current_user.can(Permission.ADMINISTER):
-                user_info = User.query.filter_by(username=username, deleted=False).first()
+                user_info = User.query.filter_by(username=username, delete=False).first()
                 if user_info:
                     form = self.admin_form()
                     form.email.data = user_info.email
@@ -198,7 +198,7 @@ class EditProfile(MethodView):
         else:
             if current_user.can(Permission.ADMINISTER):
                 form = self.form(request.form)
-                user = User.query.filter_by(username=username, deleted=False).first()
+                user = User.query.filter_by(username=username, delete=False).first()
                 if user:
                     if not current_user.verify_password(form.oripassword.data):
                         flash(u'管理员密码输入错误')
@@ -224,13 +224,13 @@ class EditProfile(MethodView):
         user.save()
 
 
-class OprationLog(MethodView):
+class OperationLog(MethodView):
     decorators = [login_required, admin_required]
 
     def get(self, page):
         per_page = 10
-        count = UserOpration.query.count()
-        query = UserOpration.query.order_by(UserOpration.id.desc())\
+        count = UserOperation.query.count()
+        query = UserOperation.query.order_by(UserOperation.id.desc())\
                                   .paginate(page=page, per_page=per_page, error_out=False)
         foot_bar = Pagination(css_framework='bootstrap3', link_size='sm',
                               show_single_page=False, page=page, per_page=per_page,
@@ -248,7 +248,7 @@ class Ban(MethodView):
     def get(self, page):
         per_page = 10
         count = BanList.query.count()
-        pagination = BanList.query.filter_by(deleted=False)\
+        pagination = BanList.query.filter_by(delete=False)\
                                   .paginate(page=page, per_page=per_page, error_out=False)  # TODO: 把关键词读入配置减少查询次数
         foot_bar = Pagination(css_framework='bootstrap3', link_size='sm',
                               show_single_page=False, page=page, per_page=per_page,

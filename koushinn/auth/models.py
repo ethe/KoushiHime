@@ -53,12 +53,12 @@ class User(UserMixin, db.Model, CRUDMixin):
     email = db.Column(db.String(64), unique=True)
     username = db.Column(db.String(64), unique=True, index=True)
     role_id = db.Column(db.Integer, db.ForeignKey('roles.id'))
-    push_records = db.relationship('UserOpration', backref='handlers', lazy='dynamic')
+    push_records = db.relationship('Useroperation', backref='handlers', lazy='dynamic')
     password_hash = db.Column(db.String(128))
     aboutme = db.Column(db.Text())
     member_since = db.Column(db.DateTime(), default=datetime.utcnow)
     last_seen = db.Column(db.DateTime(), default=datetime.utcnow)
-    deleted = db.Column(db.Boolean(), default=False)
+    delete = db.Column(db.Boolean(), default=False)
 
     @property
     def password(self):
@@ -92,11 +92,11 @@ class User(UserMixin, db.Model, CRUDMixin):
         return self.role.permissions == Permission.BLOCKED
 
 
-class UserOpration(db.Model, CRUDMixin):
-    __tablename__ = 'user_oprations'
+class UserOperation(db.Model, CRUDMixin):
+    __tablename__ = 'user_operations'
 
     id = db.Column(db.Integer(), primary_key=True)
     user_id = db.Column(db.Integer(), db.ForeignKey('users.id'))
-    opration = db.Column(db.SmallInteger())
+    operation = db.Column(db.SmallInteger())
     title = db.Column(db.Text())
     created_time = db.Column(db.DateTime(), default=datetime.utcnow)

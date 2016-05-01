@@ -13,7 +13,7 @@ class PushRecord(db.Model, CRUDMixin):
     is_auto = db.Column(db.Boolean(), default=True)
     created_time = db.Column(db.DateTime(), default=datetime.utcnow)
     pushed_time = db.Column(db.DateTime(), nullable=True, default=None)
-    deleted = db.Column(db.Boolean(), default=False)
+    delete = db.Column(db.Boolean(), default=False)
     is_success = db.Column(db.Boolean(), default=True)
 
 
@@ -33,5 +33,5 @@ class BanList(db.Model, CRUDMixin):
 
     id = db.Column(db.Integer(), primary_key=True)
     rule = db.Column(db.Text(), unique=True)
-    deleted = db.Column(db.Boolean(), default=False)
+    delete = db.Column(db.Boolean(), default=False)
     created_time = db.Column(db.DateTime(), default=datetime.utcnow)
