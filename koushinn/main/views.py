@@ -2,7 +2,7 @@
 
 from datetime import datetime
 from models import WaitingList
-from form import PushForm, AddUserForm
+from form import PushForm, AddUserForm, EditProfileForm, AdminEditProfileForm
 from utils import recent_have_pushed, have_auto_catched
 from koushinn.utils import Pagination
 from koushinn.utils.moegirl import MoegirlQuery
@@ -79,26 +79,32 @@ class ManualUpdate(MethodView):
             form = self.form(request.form)
             if form.validate():
                 title = form.pushtitle.data
-                moegirl_entry = MoegirlQuery(title)
-                namespace = moegirl_entry.get_namespace()
-                if namespace is 0:
-                    has_been_baned = moegirl_entry.banned_moegirl_category(title)
-                    has_pushed = recent_have_pushed(title)  # TODO: 改成自动冒泡
-                    has_catched = have_auto_catched(title)
-                    # TODO: 推送检查是否被正则ban掉
-                    if has_been_baned is True and has_pushed is False and has_catched is False:
-                        WaitingList(title=title).save()
-                        UserOpration(user_id=current_user.id, title=title).save()
-                        flash(u"操作成功，词条将在下一次推送中推送")
-                    else:
-                        flash(u"推送条目被ban，或者已经在24小时之内推送过，或者已经被更新姬捕捉进精灵求")
+                result = self.check_push_validate(title)
+                if result:
+                    WaitingList(title=title).save()
+                    UserOpration(user_id=current_user.id, title=title).save()
+                    flash(u"操作成功，词条将在下一次推送中推送")
                 else:
-                    flash(u"错误-条目不在主名字空间")
+                    flash(u"推送条目被ban，或者已经在24小时之内推送过，或者已经被更新姬捕捉进精灵球")
             else:
-                flash(u"条目格式有问题，请检查并重新添些")
+                flash(u"条目格式有问题，请检查并重新填写")
         else:
             flash(u"你没有权限")
             return redirect(url_for('main.mupdate'))
+
+    @staticmethod
+    def check_push_validate(title):
+        moegirl_entry = MoegirlQuery(title)
+        namespace = moegirl_entry.get_namespace()
+        if namespace is 0:
+            baned_from_moegirl = moegirl_entry.banned_moegirl_category(title)
+            has_pushed = recent_have_pushed(title)  # TODO: 改成自动冒泡
+            has_catched = have_auto_catched(title)
+            # TODO: 推送检查是否被正则ban掉
+            result = baned_from_moegirl is False and has_pushed is False and has_catched is False
+            return result
+        else:
+            return False
 
 
 class UserInfo(MethodView):
@@ -123,6 +129,7 @@ class UserList(MethodView):
 
     def get(self):
         if current_user.can(Permission.ADMINISTER):
+            userlist = User.query.all()
             return render_template('userlist.html', userlist=userlist, form=self.form())
         else:
             abort(403)
@@ -140,45 +147,30 @@ class UserList(MethodView):
                 except:
                     flash(u'用户不存在')
         elif request.form:
-            form = self.form(request.form)
-            if form.validate():
-                role = Role.query.filter_by(name=form.role.data).first()
-                if role:
-                    user = User(email=form.email.data, username=form.username.data,
-                                role=role, password=form.password.data)
-                    user.save()
-                else:
-                    flash(u'不存在该用户组')
+            self.add_user()
         return redirect('userlist')
 
-
-@main.route('/userlist', methods=['GET', 'POST'])
-@login_required
-def userlist():
-    u = User()
-    form = AddUserForm()
-    flag = current_user.is_administrator(g.user)
-    if flag is True:
-        userlist = u.GetUserList()
-        jsondata = request.get_json()
-        if request.method == 'POST' and jsondata:
-            if jsondata['action'] == u'edit':
-                username = jsondata['username']
-                location = url_for('.admin_edit_profile', username=username)
-                return jsonify({"status": 302, "location": location})
+    def add_user(self):
+        form = self.form(request.form)
+        if form.validate():
+            role = Role.query.filter_by(name=form.role.data).first()
+            if role:
+                user = User(email=form.email.data, username=form.username.data,
+                            role=role, password=form.password.data)
+                user.save()
             else:
-                username = jsondata['username']
-                u.RemUser(username)
-                return redirect('userlist')
-        elif request.method == 'POST' and form.validate():
-            pwd = u.GetPassword(g.user)
-            if u.verify_password(form.oripassword.data):
-                u.AddUser(form.username.data, form.password.data, form.role.data, form.email.data)
-                return redirect('userlist')
-        else:
-            return render_template('userlist.html', userlist=userlist, form=form)
-    else:
-        abort(403)
+                flash(u'不存在该用户组')
+
+
+class EditProfile(MethodView):
+    decorators = [login_required]
+
+    def __init__(self):
+        self.form = EditProfileForm
+        self.admin_form = AdminEditProfileForm
+
+    def get(self):
+        pass
 
 
 @main.route('/edit_profile', methods=['GET', 'POST'])

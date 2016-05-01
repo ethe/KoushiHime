@@ -44,8 +44,8 @@ class MoegirlQuery(object):
         banned = u"Category:屏蔽更新姬推送的条目"
         for i in range(len(cat)):
             if cat[i] == banned.encode('utf-8'):
-                return False
-        return True
+                return True
+        return False
 
     def get_namespace(self):
         response = self.response if self.response else self.request()
