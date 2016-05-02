@@ -19,7 +19,7 @@ class Login(MethodView):
         if form.validate():
             email = form.email.data
             try:
-                user = User.query.filter_by(email=email, delete=False).first()
+                user = User.query.filter_by(email=email, deleted=False).first()
             except Exception, e:
                 flash(u"程序内部错误，看见此条信息请尝试刷新或联系管理员")
                 raise e

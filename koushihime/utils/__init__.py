@@ -31,10 +31,10 @@ class CRUDMixin(object):
             db.session.rollback()
             raise e
 
-    def delete(self, sign='delete'):
+    def delete(self, sign='deleted'):
         """Delete the object from the database."""
         if hasattr(self, sign):
-            self.sign = True
+            setattr(self, sign, True)
             db.session.add(self)
         else:
             db.session.delete(self)

@@ -126,7 +126,7 @@ class UserInfo(MethodView):
     def get(self, username):
         is_admin = current_user.can(Permission.ADMINISTER)
         if current_user.username == username or is_admin is True:
-            user_info = User.query.filter_by(username=username, delete=False).first()
+            user_info = User.query.filter_by(username=username, deleted=False).first()
             if not user_info:
                 abort(404)
             return render_template('user.html', u=user_info, username=user_info.username)
@@ -141,7 +141,7 @@ class UserList(MethodView):
         self.form = AddUserForm
 
     def get(self):
-        userlist = User.query.filter_by(delete=False).all()
+        userlist = User.query.filter_by(deleted=False).all()
         return render_template('userlist.html', userlist=userlist, form=self.form())
 
     def post(self):
@@ -149,13 +149,13 @@ class UserList(MethodView):
         if data:
             if data['action'] == 'edit':
                 username = data['username']
-                return jsonify({"status": 302, "location": url_for('main.editprofile', username=username)})
             else:
                 username = data['username']
                 try:
-                    User.query.filter_by(username=username, delete=False).first().delete()
+                    User.query.filter_by(username=username, deleted=False).first().delete()
                 except:
                     flash(u'用户不存在')
+            return jsonify({"status": 302, "location": url_for('main.editprofile', username=username)})
         elif request.form:
             self.add_user()
         return redirect('userlist')
@@ -190,7 +190,7 @@ class EditProfile(MethodView):
             form.about_me.data = current_user.aboutme
         else:
             if current_user.can(Permission.ADMINISTER):
-                user_info = User.query.filter_by(username=username, delete=False).first()
+                user_info = User.query.filter_by(username=username, deleted=False).first()
                 if user_info:
                     form = self.admin_form()
                     form.email.data = user_info.email
@@ -210,7 +210,7 @@ class EditProfile(MethodView):
         else:
             if current_user.can(Permission.ADMINISTER):
                 form = self.form(request.form)
-                user = User.query.filter_by(username=username, delete=False).first()
+                user = User.query.filter_by(username=username, deleted=False).first()
                 if user:
                     if not current_user.verify_password(form.oripassword.data):
                         flash(u'管理员密码输入错误')
@@ -251,7 +251,7 @@ class OperationLog(MethodView):
                                 page=page, per_page=per_page, pagination=foot_bar)
 
 
-class Ban(MethodView):
+class KeywordBan(MethodView):
     decorators = [login_required, admin_required]
 
     def __init__(self):
@@ -259,14 +259,14 @@ class Ban(MethodView):
 
     def get(self, page):
         per_page = 10
-        count = BanList.query.count()
-        pagination = BanList.query.filter_by(delete=False)\
+        count = BanList.query.filter_by(deleted=False).count()
+        pagination = BanList.query.filter_by(deleted=False)\
                                   .paginate(page=page, per_page=per_page, error_out=False)  # TODO: 把关键词读入配置减少查询次数
         foot_bar = PaginationBar(css_framework='bootstrap3', link_size='sm',
                                  show_single_page=False, page=page, per_page=per_page,
                                  total=count, format_total=True, format_number=True)
         template_param = {
-            'keywords': pagination,
+            'keywords': pagination.items,
             'page': page,
             'per_page': per_page,
             'pagination': foot_bar,
@@ -274,7 +274,7 @@ class Ban(MethodView):
         }
         return render_template('ban.html', **template_param)
 
-    def post(self):
+    def post(self, page):
         data = request.get_json()
         if data:
             keyword = data['keyword']
@@ -284,6 +284,7 @@ class Ban(MethodView):
                 flash(u'成功删除关键词')
             else:
                 flash(u'该关键词不存在')
+            return jsonify({"status": 302, "location": url_for('main.ban')})
         elif request.form:
             form = self.form(request.form)
             if form.validate():
@@ -291,6 +292,8 @@ class Ban(MethodView):
                     ban = BanList(rule=form.keyword.data)
                     ban.save()
                     flash(u'添加关键词成功')
+                else:
+                    flash(u'重复添加关键词')
         return redirect(url_for('main.ban'))
 
 

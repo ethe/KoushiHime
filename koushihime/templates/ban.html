@@ -11,7 +11,7 @@ function sendtoken(callback, id) {
 </script>
 {% endblock %}
 {% block mainbody %}
-<div class="raw">  
+<div class="raw">
     <div class="col-md-6">
         <table class='table table-hover'>
             <tr>
@@ -22,12 +22,12 @@ function sendtoken(callback, id) {
             <tr>
             {% for keyword in keywords %}
                 <th>{{ loop.index + (page - 1) * per_page }}</th>
-                <th>{{ keyword }}</th>
-                <th>                    
-                    <button class='btn btn-default' id='{{keyword}}' value='edit' onclick='sendtoken(delkeywordbtnclick,this.id)'>  删除</button>
+                <th>{{ keyword.rule }}</th>
+                <th>
+                    <button class='btn btn-default' id='{{keyword.rule}}' value='edit' onclick='sendtoken(delkeywordbtnclick,this.id)'>  删除</button>
                 </th>
             </tr>
-                {% endfor %}  
+                {% endfor %}
         </table>
         {{ pagination.links }}
     </div>

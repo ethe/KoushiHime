@@ -1,12 +1,13 @@
 # -*- coding:utf-8 -*-
 
 from koushihime.main import main
-from views import Index, Update, UserInfo, UserList, EditProfile, OperationLog, ManualUpdate
+from views import Index, Update, UserInfo, UserList, EditProfile, OperationLog, ManualUpdate, KeywordBan
 
 
 update_view = Update.as_view('update')
 edit_profile_view = EditProfile.as_view('editprofile')
 operation_log_view = OperationLog.as_view('operationlog')
+ban_keyword_view = KeywordBan.as_view('ban')
 
 
 main.add_url_rule('/', view_func=Index.as_view('index'))
@@ -27,4 +28,8 @@ main.add_url_rule('/edit_profile', view_func=edit_profile_view,
 
 main.add_url_rule('/log/<int:page>', view_func=operation_log_view)
 main.add_url_rule('/log', view_func=operation_log_view,
+                          defaults={'page': 1})
+
+main.add_url_rule('/ban/<int:page>', view_func=ban_keyword_view)
+main.add_url_rule('/ban', view_func=ban_keyword_view,
                           defaults={'page': 1})
