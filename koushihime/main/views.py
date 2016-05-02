@@ -9,6 +9,7 @@ from koushihime.auth.models import UserOperation, User, Role
 from koushihime.auth.constants import Permission, Operation
 from koushihime.utils import Pagination, admin_required
 from koushihime.utils.moegirl import MoegirlQuery
+from koushihime.utils.weibo import APIClient
 from utils import recent_have_pushed, have_auto_catched
 from models import WaitingList, BanList
 from form import PushForm, AddUserForm, EditProfileForm, AdminEditProfileForm, BanKeywordForm
@@ -282,26 +283,26 @@ class Ban(MethodView):
 
 
 class WeiboAuthCallback(MethodView):
+    decorators = [login_required, admin_required]
 
     def get(self):
-        auth_code = request.args.get("code")
+        self.auth_code = request.args.get("code")
+        result = self.fresh_access()
+        if result is True:
+            return render_template('success.html')
+        else:
+            return render_template('failed.html', e=result)
 
-
-
-@main.route('/code')
-@login_required
-def code():
-    code = request.args.get('code')
-    flag = RefreshCode(code)
-    if flag is True:
-        return render_template('success.html')
-    else:
-        return render_template('failed.html', e=flag)
-
-
-@main.route('/limit')
-@login_required
-def limit():
-    flag = current_user.is_administrator(g.user)
-    if flag is True:
-        form = LimitKeywordForm()
+    def fresh_access(self):
+        callback = current_app.config["WEIBO_CALLBACK_URL"]
+        app_key = current_app.config["WEIBO_AUTH_CONFIG"]["APP_KEY"]
+        app_secret_key = current_app.config["WEIBO_AUTH_CONFIG"]["APP_SECRET"]
+        try:
+            client = APIClient(app_key=app_key, app_secret=app_secret_key, redirect_uri=callback)
+            token_data = client.request_access_token(self.auth_code)
+            access_token, expires_in = token_data.access_token, token_data.expires_in
+        except BaseException as e:
+            return e
+        current_app.config["ACCESS_TOKEN"] = access_token
+        current_app.config["EXPIRE_TIME"] = expires_in
+        return True
