@@ -1,9 +1,12 @@
 # -*- coding: utf-8 -*-
 
+import os
 import json
+from hashlib import md5
 from collections import OrderedDict
-from urllib import urlencode, urlopen
-from urllib2 import Request
+from urllib import urlencode
+from urllib2 import Request, urlopen
+from bs4 import BeautifulSoup
 from flask import current_app
 from . import _decode_dict
 
@@ -12,7 +15,7 @@ class MoegirlQuery(object):
 
     def __init__(self, title):
         self.title = title
-        self.api_url = current_app.cofig["MOEGIRL_API_ROOT"]
+        self.api_url = current_app.config["MOEGIRL_API_ROOT"]
         self.params = {'format': 'json', 'action': 'query',
                        'prop': 'categories', 'titles': title}
         self.response = None
@@ -56,3 +59,74 @@ class MoegirlQuery(object):
             namespace = response_odict['query']['pages'][key]['ns']
             return namespace
         return None
+
+
+class MoegirlImage(object):
+
+    def __init__(self, title):
+        self.path_root = "./koushihime/imgcache"
+        self.url = "https://zh.moegirl.org/" + title
+        self.touch_cache_folder()
+        self.raw_bytes = self.get_image()
+        self.hash = self.image_hash()
+        self.path = self.save_image()
+        self.raw_bytes = lambda: open(self.path, 'rb')
+
+    def image_hash(self):
+        if self.raw_bytes:
+            hash_object = md5()
+            return hash_object.hexdigest()
+        return ''
+
+    def get_image(self):
+        image_file = urlopen(self.url)
+        raw_html = image_file.read()
+        ssrc = BeautifulSoup(raw_html, "html.parser")
+        image_url = None
+        try:
+            image_div = ssrc.find_all('a', class_='image')
+            for image in image_div:
+                imgtag = image.find('img')
+                if (int(imgtag['width']) > 200 and int(imgtag['height']) > 100):
+                    image_url = imgtag['src']
+                    break
+        except:
+            return None
+        if image_url:
+            self.type = image_url.split('.')[-1]
+            try:
+                headers = {
+                    "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
+                    "accept-language": "zh-CN,zh;q=0.8,zh-TW;q=0.6,en;q=0.4",
+                    "cache-control": "max-age=0",
+                    "cookie": "__cfduid=dfc6b63939d0f061541f2368f5233734b1461485677",
+                    "if-none-match": "56a5edcc-8cb9",
+                    "upgrade-insecure-requests": "1",
+                    "user-agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/48.0.2564.109 Safari/537.36"
+                }
+                request = Request(url=image_url, headers=headers)
+                image = urlopen(request)
+                image_bytes = image.read()
+            except:
+                return None
+        else:
+            return None
+        return image_bytes
+
+    def save_image(self):
+        if self.raw_bytes and self.hash:
+            try:
+                file_path = "{}/{}.{}".format(self.path_root, self.hash, self.type)
+                if not os.path.exists(file_path):
+                    with open(file_path, 'wb') as f:
+                        f.write(self.raw_bytes)
+                        f.flush()
+                return file_path
+            except:
+                return None
+        return None
+
+    def touch_cache_folder(self):
+        is_exists = os.path.exists(self.path_root)
+        if not is_exists:
+            os.makedirs(self.path_root)
