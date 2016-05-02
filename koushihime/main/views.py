@@ -94,7 +94,11 @@ class ManualUpdate(MethodView):
                 title = form.pushtitle.data
                 result = self.check_push_validate(title)
                 if result:
-                    WaitingList(title=title).save()
+                    current_weight = current_app.config["CUTTING_WEIGHT_INIT"]
+                    entry = WaitingList(title=title)
+                    entry.cutting_weight = current_weight + 1  # FIXME: 即使条目处于权重最高状态亦可增加权限
+                    entry.save()
+                    current_app.config["CUTTING_WEIGHT_INIT"] += 1
                     UserOperation(user_id=current_user.id, title=title).save()
                     flash(u"操作成功，词条将在下一次推送中推送")
                 else:
