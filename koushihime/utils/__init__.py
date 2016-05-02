@@ -8,15 +8,13 @@ from flask.ext.login import current_user
 from koushihime.auth.constants import Permission
 
 
-def admin_required():
-    def decorator(func):
-        @functools.wraps(func)
-        def wrapper(*args, **kw):
-            if not current_user.can(Permission.ADMINISTER):
-                abort(403)
-            return func(*args, **kw)
-        return wrapper
-    return decorator
+def admin_required(func):
+    @functools.wraps(func)
+    def wrapper(*args, **kw):
+        if not current_user.can(Permission.ADMINISTER):
+            abort(403)
+        return func(*args, **kw)
+    return wrapper
 
 
 class CRUDMixin(object):

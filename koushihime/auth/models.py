@@ -50,10 +50,10 @@ class User(UserMixin, db.Model, CRUDMixin):
     __tablename__ = 'users'
 
     id = db.Column(db.Integer(), primary_key=True)
-    email = db.Column(db.String(64), unique=True)
-    username = db.Column(db.String(64), unique=True, index=True)
-    role_id = db.Column(db.Integer, db.ForeignKey('roles.id'))
-    push_records = db.relationship('Useroperation', backref='handlers', lazy='dynamic')
+    email = db.Column(db.String(64), unique=True, nullable=False)
+    username = db.Column(db.String(64), unique=True, index=True, nullable=False)
+    role_id = db.Column(db.Integer, db.ForeignKey('roles.id'), nullable=False)
+    push_records = db.relationship('UserOperation', backref='handlers', lazy='dynamic')
     password_hash = db.Column(db.String(128))
     aboutme = db.Column(db.Text())
     member_since = db.Column(db.DateTime(), default=datetime.utcnow)
@@ -88,8 +88,13 @@ class User(UserMixin, db.Model, CRUDMixin):
         return self.role is not None and \
             (self.role.permissions & permissions) == permissions
 
+    @property
     def is_blocked(self):
         return self.role.permissions == Permission.BLOCKED
+
+    @property
+    def is_administrator(self):
+        return self.can(Permission.ADMINISTER)
 
 
 class UserOperation(db.Model, CRUDMixin):

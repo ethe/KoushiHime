@@ -1,5 +1,5 @@
-{% extends 'base.html' %} 
-{% block title %}萌娘百科的更新姬-{{ username }}的个人资料{% endblock %} 
+{% extends 'base.html' %}
+{% block title %}萌娘百科的更新姬-{{ username }}的个人资料{% endblock %}
 {% block mainbody %}
 <div class='page-header'>
     <h1>个人资料</h1>
@@ -8,12 +8,12 @@
     <div class='col-md-9 col-md-offset-1'>
         <p>用户名:{{ username }}</p>
         <p>邮件地址:<a href='mailto:{{ u.email }}'>{{ u.email }}</a></p>
-        <p>职务:{{ u.role }}</p>
+        <p>职务:{{ u.role.name }}</p>
         {% if u.aboutme %}
         <p>个人签名:{{ u.aboutme }}</p>
         {% endif %}
     </div>
-    {% if current_user.is_administrator(current_user.id) %}
+    {% if current_user.is_administrator %}
     <div class='text-right'><a href='/edit_profile/{{ username }}'>编辑资料</a>
     {% else %}
     <div class='text-right'><a href='/edit_profile'>编辑资料</a>

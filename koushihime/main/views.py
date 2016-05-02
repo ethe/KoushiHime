@@ -10,9 +10,21 @@ from koushihime.auth.constants import Permission, Operation
 from koushihime.utils import Pagination, admin_required
 from koushihime.utils.moegirl import MoegirlQuery
 from koushihime.utils.weibo import APIClient
+from . import main
 from utils import recent_have_pushed, have_auto_catched
 from models import WaitingList, BanList
 from form import PushForm, AddUserForm, EditProfileForm, AdminEditProfileForm, BanKeywordForm
+
+
+@main.before_request
+def before_request():
+    if current_user.is_anonymous:
+        return redirect(url_for('auth.login'))
+    elif current_user.is_blocked:
+        return render_template('auth/block.html')
+    else:
+        current_user.last_seen = datetime.utcnow()
+        current_user.save()
 
 
 class Index(MethodView):
@@ -114,7 +126,7 @@ class UserInfo(MethodView):
     def get(self, username):
         is_admin = current_user.can(Permission.ADMINISTER)
         if current_user.username == username or is_admin is True:
-            user_info = User.query.query.filter_by(username=username, delete=False).first()
+            user_info = User.query.filter_by(username=username, delete=False).first()
             if not user_info:
                 abort(404)
             return render_template('user.html', u=user_info, username=user_info.username)
@@ -137,7 +149,7 @@ class UserList(MethodView):
         if data:
             if data['action'] == 'edit':
                 username = data['username']
-                return redirect(url_for('main.editprofile'), username=username)
+                return jsonify({"status": 302, "location": url_for('main.editprofile', username=username)})
             else:
                 username = data['username']
                 try:
@@ -153,7 +165,7 @@ class UserList(MethodView):
         if form.validate():
             role = Role.query.filter_by(name=form.role.data).first()
             if role:
-                if not User.query.filter_by(email=form.email.data).exists():
+                if not User.query.filter_by(email=form.email.data).first():
                     user = User(email=form.email.data, username=form.username.data,
                                 role=role, password=form.password.data)
                     user.save()
@@ -189,7 +201,7 @@ class EditProfile(MethodView):
                     return redirect(url_for('main.index'))
             else:
                 abort(403)
-        return render_template('edit_profile.html', form=self.form(), u=current_user)
+        return render_template('edit_profile.html', form=form, u=current_user)
 
     def post(self, username):
         if not username:
@@ -275,7 +287,7 @@ class Ban(MethodView):
         elif request.form:
             form = self.form(request.form)
             if form.validate():
-                if not BanList.query.filter_by(rule=form.keyword.data).exists():
+                if not BanList.query.filter_by(rule=form.keyword.data).first():
                     ban = BanList(rule=form.keyword.data)
                     ban.save()
                     flash(u'添加关键词成功')

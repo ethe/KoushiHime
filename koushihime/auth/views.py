@@ -1,22 +1,10 @@
 # -*- coding: utf-8 -*-
 
-from datetime import datetime
-from . import auth
 from models import User
 from forms import LoginForm
 from flask.views import MethodView
 from flask import render_template, request, flash, redirect, url_for
-from flask.ext.login import login_user, login_required, logout_user, current_user
-
-
-@auth.before_app_request
-@login_required
-def before_request():
-    if current_user.is_blocked():
-        return render_template('auth/block.html')
-    else:
-        current_user.last_seen = datetime.utcnow()
-        current_user.save()
+from flask.ext.login import login_user, login_required, logout_user
 
 
 class Login(MethodView):

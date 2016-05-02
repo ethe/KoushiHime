@@ -22,8 +22,8 @@
                     {% if current_user.is_authenticated %}
                     <li><a href='/update'>推送状态</a></li>
                     <li><a href='/mupdate'>手动推送</a></li>
-                    <li><a href='/user/{{current_user.id}}'>个人资料</a></li>
-                    {% if current_user.is_administrator(current_user.id) %}
+                    <li><a href='/user/{{current_user.username}}'>个人资料</a></li>
+                    {% if current_user.is_administrator %}
                     <li><a href='/userlist'>用户列表</a></li>
                     <li><a href='/log'>推送记录</a></li>
                     <li><a href='/ban'>关键词屏蔽</a></li>

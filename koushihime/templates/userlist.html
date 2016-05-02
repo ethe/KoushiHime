@@ -1,6 +1,6 @@
-{% extends "base.html" %} 
-{% block title %}萌娘百科的更新姬-用户列表{% endblock %} 
-{% block scripts %} 
+{% extends "base.html" %}
+{% block title %}萌娘百科的更新姬-用户列表{% endblock %}
+{% block scripts %}
 {{ super() }}
 <script type="text/javascript" src="/static/refresh.js"></script>
 <script>
@@ -28,17 +28,17 @@ function deleteuser(callback) {
                 <th>编辑</th>
                 <th>删除</th>
             </tr>
-            {% for username in userlist %}
+            {% for user in userlist %}
             <tr>
                 <th>{{ loop.index }}</th>
                 <th>
-                    <p><a href='{{ url_for('main.user',username=username) }}'>{{ username }} </a></p>
+                    <p><a href='{{ url_for('main.user',username=username) }}'>{{ user.username }} </a></p>
                 </th>
                 <th>
-                    <button class='btn btn-default' id='{{username}}' value='edit' onclick='sendtoken(editbtnclick,this.id)'>编辑</button>
+                    <button class='btn btn-default' id='{{user.username}}' value='edit' onclick='sendtoken(editbtnclick,this.id)'>编辑</button>
                 </th>
                 <th>
-                    <button class='btn btn-default' id='{{username}}' value='delete' onclick='saveid(this.id)' data-toggle='modal' data-target='#deleteModal'>删除</button>
+                    <button class='btn btn-default' id='{{user.username}}' value='delete' onclick='saveid(this.id)' data-toggle='modal' data-target='#deleteModal'>删除</button>
                 </th>
             </tr>
             {% endfor %}
@@ -47,12 +47,12 @@ function deleteuser(callback) {
     <div class='col-md-4 col-md-offset-1'>
         <p class='lead'> 添加用户</p>
         <form method='POST'>
-            {{ form.hidden_tag() }} 
-            {{ form.username.label }} {{ form.username(class='form-control',id='username',placeholder='用户名') }} 
-            {{ form.password.label }} {{ form.password(class='form-control',id='password',placeholder='密码') }} 
-            {{ form.password2.label }} {{ form.password2(class='form-control',id='password2',placeholder='确认密码') }} 
-            {{ form.email.label }} {{ form.email(class='form-control',id='email',placeholder='电子邮箱') }} 
-            {{ form.role.label }} {{form.role(class='form-control',id='role')}} 
+            {{ form.hidden_tag() }}
+            {{ form.username.label }} {{ form.username(class='form-control',id='username',placeholder='用户名') }}
+            {{ form.password.label }} {{ form.password(class='form-control',id='password',placeholder='密码') }}
+            {{ form.password2.label }} {{ form.password2(class='form-control',id='password2',placeholder='确认密码') }}
+            {{ form.email.label }} {{ form.email(class='form-control',id='email',placeholder='电子邮箱') }}
+            {{ form.role.label }} {{form.role(class='form-control',id='role')}}
             {{form.oripassword.label}}  {{form.oripassword(class='form-control',id='oripassword')}}
             <br />
             {{form.submit(class='btn btn-primary form-control')}}

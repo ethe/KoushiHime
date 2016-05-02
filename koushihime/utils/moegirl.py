@@ -2,7 +2,8 @@
 
 import json
 from collections import OrderedDict
-from urllib2 import urlencode, Request, urlopen
+from urllib import urlencode, urlopen
+from urllib2 import Request
 from flask import current_app
 from . import _decode_dict
 

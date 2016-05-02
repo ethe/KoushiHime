@@ -29,7 +29,7 @@ class WaitingList(db.Model, CRUDMixin):
 
 
 class BanList(db.Model, CRUDMixin):
-    __tablename__ = 'wating_list'
+    __tablename__ = 'ban_list'
 
     id = db.Column(db.Integer(), primary_key=True)
     rule = db.Column(db.Text(), unique=True)

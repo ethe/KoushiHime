@@ -1,7 +1,7 @@
 # -*- coding:utf-8 -*-
 
 import os
-from moegirl import create_app, db
+from koushihime import create_app, db
 from flask.ext.script import Manager, Shell, Server
 from flask.ext.migrate import Migrate, MigrateCommand
 
