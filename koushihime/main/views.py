@@ -13,7 +13,7 @@ from koushihime.utils.weibo import APIClient
 from . import main
 from utils import recent_have_pushed, have_auto_catched
 from models import WaitingList, BanList
-from form import PushForm, AddUserForm, EditProfileForm, AdminEditProfileForm, BanKeywordForm
+from forms import PushForm, AddUserForm, EditProfileForm, AdminEditProfileForm, BanKeywordForm
 
 
 @main.before_request
