@@ -43,20 +43,20 @@ class DevelopmentConfig(Config):
     SQLALCHEMY_DATABASE_URI = os.environ.get('DEV_DATABASE_URL') or \
         'sqlite:///' + os.path.join(basedir, '../../data-dev.sqlite')
     # celery中间人
-    BROKER_URL = SQLALCHEMY_DATABASE_URI
+    CELERY_BROKER_URL = SQLALCHEMY_DATABASE_URI
 
 
 class TestingConfig(Config):
     TESTING = True
     SQLALCHEMY_DATABASE_URI = os.environ.get('TEST_DATABASE_URL') or \
         'sqlite:///' + os.path.join(basedir, '../../data-test.sqlite')
-    BROKER_URL = SQLALCHEMY_DATABASE_URI
+    CELERY_BROKER_URL = SQLALCHEMY_DATABASE_URI
 
 
 class ProductionConfig(Config):
     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or \
         'sqlite:///' + os.path.join(basedir, '../../data.sqlite')
-    BROKER_URL = SQLALCHEMY_DATABASE_URI
+    CELERY_BROKER_URL = SQLALCHEMY_DATABASE_URI
 
 
 config = {

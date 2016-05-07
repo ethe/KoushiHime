@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 
-import re
 from datetime import datetime
 from flask.views import MethodView
 from flask.ext.login import current_user, login_required

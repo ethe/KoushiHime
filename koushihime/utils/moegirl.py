@@ -5,6 +5,7 @@ import os
 import json
 from hashlib import md5
 from collections import OrderedDict
+from datetime import datetime, timedelta
 from urllib import urlencode
 from urllib2 import Request, urlopen
 from bs4 import BeautifulSoup
@@ -151,3 +152,20 @@ class MoegirlImage(object):
             "user-agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/48.0.2564.109 Safari/537.36"
         }
         return headers
+
+
+def get_recent_changes():
+    apiurl = "https://zh.moegirl.org/api.php"
+    date_format = "%Y%m%d%H%M%S"
+    utc = datetime.utcnow()
+    rcstart = (utc - timedelta(hours=1)).strftime(date_format)
+    rcend = utc.strftime(date_format)
+    parmas = urlencode({'format': 'json', 'action': 'query', 'list': 'recentchanges', 'rcstart': rcstart, 'rcend': rcend,
+                               'rcdir': 'newer', 'rcnamespace': '0', 'rctoponly': '', 'rctype': 'edit|new', 'continue': '',
+                               'rcprop': 'title|sizes'})
+    req = Request(url=apiurl, data=parmas)
+    res_data = urlopen(req)
+    ori = res_data.read()
+    change_query = json.loads(ori, object_hook=_decode_dict)
+    change_list = change_query['query']['recentchanges']
+    return change_list

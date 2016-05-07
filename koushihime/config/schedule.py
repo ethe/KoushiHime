@@ -22,17 +22,17 @@ class CelerySchedule:
         },
         'afternoon_push': {
             'task': 'tasks.push',
-            'schedule': crontab(hour='10-17', minute='/15'),
+            'schedule': crontab(hour='10-17', minute='*/15'),
             'args': (),
         },
         'late_afternoon_push': {
             'task': 'tasks.push',
-            'schedule': crontab(hour='18-21', minute='/10'),
+            'schedule': crontab(hour='18-21', minute='*/10'),
             'args': (),
         },
         'evening_push': {
             'task': 'tasks.push',
-            'schedule': crontab(hour='22-23', minute='/15'),
+            'schedule': crontab(hour='22-23', minute='*/15'),
             'args': (),
         },
         'check_update': {
