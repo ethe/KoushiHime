@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import re
 import os
 import json
 from hashlib import md5
@@ -9,6 +10,7 @@ from urllib2 import Request, urlopen
 from bs4 import BeautifulSoup
 from flask import current_app
 from . import _decode_dict
+from koushihime.main.models import BanList
 
 
 class MoegirlQuery(object):
@@ -60,21 +62,35 @@ class MoegirlQuery(object):
             return namespace
         return None
 
+    def ban_from_regex(self):
+        regex_list = BanList.query.all()
+        if regex_list:
+            for rule in regex_list:
+                if 'Category:' not in rule:
+                    if re.search(rule, self.title):
+                        return True
+                else:
+                    categories = self.get_categories()
+                    for category in categories:
+                        if re.search(rule, category):
+                            return True
+        return False
+
 
 class MoegirlImage(object):
 
     def __init__(self, title):
         self.path_root = "./koushihime/imgcache"
-        self.url = "https://zh.moegirl.org/" + title
+        self.url = "https://zh.moegirl.org/" + title.encode('utf-8')
         self.touch_cache_folder()
         self.raw_bytes = self.get_image()
         self.hash = self.image_hash()
         self.path = self.save_image()
-        self.raw_bytes = lambda: open(self.path, 'rb')
+        self.raw_bytes = lambda: open(self.path, 'rb') if self.path else None
 
     def image_hash(self):
         if self.raw_bytes:
-            hash_object = md5()
+            hash_object = md5(self.raw_bytes)
             return hash_object.hexdigest()
         return ''
 
@@ -95,15 +111,7 @@ class MoegirlImage(object):
         if image_url:
             self.type = image_url.split('.')[-1]
             try:
-                headers = {
-                    "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
-                    "accept-language": "zh-CN,zh;q=0.8,zh-TW;q=0.6,en;q=0.4",
-                    "cache-control": "max-age=0",
-                    "cookie": "__cfduid=dfc6b63939d0f061541f2368f5233734b1461485677",
-                    "if-none-match": "56a5edcc-8cb9",
-                    "upgrade-insecure-requests": "1",
-                    "user-agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/48.0.2564.109 Safari/537.36"
-                }
+                headers = self.cloudflare_headers
                 request = Request(url=image_url, headers=headers)
                 image = urlopen(request)
                 image_bytes = image.read()
@@ -130,3 +138,16 @@ class MoegirlImage(object):
         is_exists = os.path.exists(self.path_root)
         if not is_exists:
             os.makedirs(self.path_root)
+
+    @property
+    def cloudflare_headers(self):
+        headers = {
+            "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
+            "accept-language": "zh-CN,zh;q=0.8,zh-TW;q=0.6,en;q=0.4",
+            "cache-control": "max-age=0",
+            "cookie": "__cfduid=dfc6b63939d0f061541f2368f5233734b1461485677",
+            "if-none-match": "56a5edcc-8cb9",
+            "upgrade-insecure-requests": "1",
+            "user-agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/48.0.2564.109 Safari/537.36"
+        }
+        return headers

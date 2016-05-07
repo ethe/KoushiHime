@@ -3,13 +3,13 @@
 import os
 from error import configure_errorhandlers
 from . import blueprint
-from celery.schedules import crontab
+from schedule import CelerySchedule
 
 
 basedir = os.path.abspath(os.path.dirname(__file__))
 
 
-class Config:
+class Config(CelerySchedule):
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'the answer of life, universe and everything'
     WTF_CSRF_ENABLED = True  # 启用csrf保护
     # SQLALCHEMY_COMMIT_ON_TEARDOWN = True  # 在每次会话被销毁前自动commit未commit的会话
@@ -17,7 +17,6 @@ class Config:
     CUTTING_WEIGHT_INIT = 0  # 插队权重初始化
 
     MOEGIRL_API_ROOT = "https://zh.moegirl.org/api.php"
-    CLOUDFARE_COOKIE = "__cfduid=dfc6b63939d0f061541f2368f5233734b1461485677"
 
     WEIBO_AUTH_CONFIG = {  # 微博登录验证配置
         'APP_KEY': '563928974',
@@ -32,13 +31,6 @@ class Config:
 
     # Celery配置
     CELERY_TIMEZONE = 'Etc/GMT+8'  # 时区设置
-    # CELERYBEAT_SCHEDULE = {
-    #     'add-every-monday-morning': {
-    #         'task': 'tasks.add',
-    #         'schedule': crontab(hour=7, minute=30, day_of_week=1),
-    #         'args': (16, 16),
-    #     },
-    # }
 
     @staticmethod
     def init_app(app):  #: 初始化
@@ -50,17 +42,21 @@ class DevelopmentConfig(Config):
     DEBUG = True
     SQLALCHEMY_DATABASE_URI = os.environ.get('DEV_DATABASE_URL') or \
         'sqlite:///' + os.path.join(basedir, '../../data-dev.sqlite')
+    # celery中间人
+    BROKER_URL = SQLALCHEMY_DATABASE_URI
 
 
 class TestingConfig(Config):
     TESTING = True
     SQLALCHEMY_DATABASE_URI = os.environ.get('TEST_DATABASE_URL') or \
         'sqlite:///' + os.path.join(basedir, '../../data-test.sqlite')
+    BROKER_URL = SQLALCHEMY_DATABASE_URI
 
 
 class ProductionConfig(Config):
     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or \
         'sqlite:///' + os.path.join(basedir, '../../data.sqlite')
+    BROKER_URL = SQLALCHEMY_DATABASE_URI
 
 
 config = {

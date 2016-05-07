@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import re
 from datetime import datetime
 from flask.views import MethodView
 from flask.ext.login import current_user, login_required
@@ -115,10 +116,13 @@ class ManualUpdate(MethodView):
         namespace = moegirl_entry.get_namespace()
         if namespace is 0:
             baned_from_moegirl = moegirl_entry.banned_moegirl_category()
+            baned_from_regex = moegirl_entry.ban_from_regex()
             has_pushed = recent_have_pushed(title)  # TODO: 改成自动冒泡
             has_catched = have_auto_catched(title)
-            # TODO: 推送检查是否被正则ban掉
-            result = baned_from_moegirl is False and has_pushed is False and has_catched is False
+            result = baned_from_moegirl is False \
+                        and has_pushed is False \
+                        and has_catched is False \
+                        and baned_from_regex is False
             return result
         else:
             return False
