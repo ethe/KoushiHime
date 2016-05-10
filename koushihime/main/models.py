@@ -10,10 +10,10 @@ class PushRecord(db.Model, CRUDMixin):
 
     id = db.Column(db.Integer(), primary_key=True)
     title = db.Column(db.Text(), index=True)
-    is_auto = db.Column(db.Boolean(), default=True)
-    created_time = db.Column(db.DateTime(), default=datetime.utcnow)
-    pushed_time = db.Column(db.DateTime(), nullable=True, default=None)
-    deleted = db.Column(db.Boolean(), default=False)
+    # is_auto = db.Column(db.Boolean(), default=True)
+    pushed_time = db.Column(db.DateTime(), default=datetime.utcnow)
+    # pushed_time = db.Column(db.DateTime(), nullable=True, default=None)
+    # deleted = db.Column(db.Boolean(), default=False)
     is_success = db.Column(db.Boolean(), default=True)
 
 

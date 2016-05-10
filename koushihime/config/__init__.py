@@ -25,9 +25,12 @@ class Config(CelerySchedule):
         'EDITEDPREFIX': 'EDITED-',
         'EXPIRETIME': '72*3600',
         'THREEDAYS': 259200,
-        'Code': '7581b56419b5ea52abc39c0f282716e6'
+        'Code': '7581b56419b5ea52abc39c0f282716e6',
+        'CALLBACK': 'http://gengxinji.acg.moe/code'
     }
     WEIBO_CALLBACK_URL = os.environ.get('WEIBO_CALLBACK_URL') or 'http://gengxinji.acg.moe/code'  # 微博回调url
+    ACCESS_TOKEN = os.environ.get("ACCESS_TOKEN")
+    EXPIRE_TIME = os.environ.get("EXPIRE_TIME")
 
     # Celery配置
     CELERY_TIMEZONE = 'Etc/GMT+8'  # 时区设置

@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import os
 from datetime import datetime
 from flask.views import MethodView
 from flask.ext.login import current_user, login_required
@@ -40,7 +41,7 @@ class Update(MethodView):
 
     def get(self, page):
         per_page = 10
-        unpushed_entry = WaitingList.query.order_by(WaitingList.id).all()
+        unpushed_entry = WaitingList.query.order_by(WaitingList.cutting_weight.desc()).all()
         pagination = Pagination(unpushed_entry, per_page)
         current_page = pagination.page(page)
         foot_bar = PaginationBar(css_framework='bootstrap3', link_size='sm',
@@ -325,6 +326,8 @@ class WeiboAuthCallback(MethodView):
             access_token, expires_in = token_data.access_token, token_data.expires_in
         except BaseException as e:
             return e
+        os.environ["ACCESS_TOKEN"] = access_token
         current_app.config["ACCESS_TOKEN"] = access_token
+        os.environ["EXPIRE_TIME"] = expires_in
         current_app.config["EXPIRE_TIME"] = expires_in
         return True
