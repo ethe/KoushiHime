@@ -15,7 +15,7 @@ class Config(object):
 
 class MU_MainConfig(Config):
     def __init__(self):
-        super(MU_MainConfig, self).__init__()
+        super(MU_MainConfig, self).__init__get_recent_changes()
         self.GetConfig()
     config = {
         'APP_KEY': '563928974',

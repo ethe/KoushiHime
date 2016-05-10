@@ -116,8 +116,8 @@ class ManualUpdate(MethodView):
         if namespace is 0:
             baned_from_moegirl = moegirl_entry.banned_moegirl_category()
             baned_from_regex = moegirl_entry.ban_from_regex()
-            has_pushed = recent_have_pushed(title)  # TODO: 改成自动冒泡
-            has_catched = have_auto_catched(title)
+            has_pushed = recent_have_pushed(title.decode("utf-8"))  # TODO: 改成自动冒泡
+            has_catched = have_auto_catched(title.decode("utf-8"))
             result = baned_from_moegirl is False \
                         and has_pushed is False \
                         and has_catched is False \

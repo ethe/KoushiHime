@@ -20,5 +20,6 @@ def check_update():
             if result:
                 image = MoegirlImage(title)
                 if image.path:
-                    entry = WaitingList(title=title, image=image.path)
+                    entry = WaitingList(title=title.decode("utf-8"), image=image.path)
                     entry.save()
+                    break

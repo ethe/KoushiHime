@@ -66,7 +66,8 @@ class MoegirlQuery(object):
     def ban_from_regex(self):
         regex_list = BanList.query.all()
         if regex_list:
-            for rule in regex_list:
+            for rule_object in regex_list:
+                rule = rule_object.rule
                 if 'Category:' not in rule:
                     if re.search(rule, self.title):
                         return True
@@ -82,7 +83,10 @@ class MoegirlImage(object):
 
     def __init__(self, title):
         self.path_root = "./koushihime/imgcache"
-        self.url = "https://zh.moegirl.org/" + title.encode('utf-8')
+        try:
+            self.url = "https://zh.moegirl.org/" + title.encode('utf-8')
+        except:
+            self.url = "https://zh.moegirl.org/" + title
         self.touch_cache_folder()
         self.raw_bytes = self.get_image()
         self.hash = self.image_hash()
