@@ -1,5 +1,6 @@
 # -*- coding:utf-8 -*-
 
+import pickle
 import functools
 from math import ceil
 from koushihime import db
@@ -108,3 +109,17 @@ def _decode_dict(data):
             value = _decode_dict(value)
         rv[key] = value
     return rv
+
+
+class Env(object):
+
+    def __init__(self):
+        self.env = pickle.load(open('./environ', 'r'))
+
+    def set(self, key, value):
+        self.env[key] = value
+        pickle.dump(self.env, open('./environ', 'w'))
+        return self.env
+
+    def get(self, key):
+        return self.env.get(key)

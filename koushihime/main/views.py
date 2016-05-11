@@ -8,7 +8,7 @@ from flask.ext.paginate import Pagination as PaginationBar
 from flask import render_template, redirect, url_for, request, jsonify, flash, current_app, abort
 from koushihime.auth.models import UserOperation, User, Role
 from koushihime.auth.constants import Permission, Operation
-from koushihime.utils import Pagination, admin_required
+from koushihime.utils import Pagination, admin_required, Env
 from koushihime.utils.moegirl import MoegirlQuery
 from koushihime.utils.weibo import APIClient
 from . import main
@@ -22,7 +22,7 @@ def before_request():
     if current_user.is_anonymous:
         return redirect(url_for('auth.login'))
     elif current_user.is_blocked:
-        return render_template('auth/block.html')
+        return render_template('main/auth/block.html')
     else:
         current_user.last_seen = datetime.utcnow()
         current_user.save()
@@ -33,7 +33,7 @@ class Index(MethodView):
     def get(self):
         if not current_user:
             return redirect(url_for("auth.login"))
-        return render_template('index.html')
+        return render_template('main/index.html')
 
 
 class Update(MethodView):
@@ -57,7 +57,7 @@ class Update(MethodView):
             "per_page": per_page,
             "pagination": foot_bar
         }
-        return render_template('update.html', **result)
+        return render_template('main/update.html', **result)
 
     def post(self, page):
         data = request.get_json()
@@ -69,6 +69,8 @@ class Update(MethodView):
                 entry.cutting_weight = current_weight + 1  # FIXME: 即使条目处于权重最高状态亦可增加权限
                 entry.save()
                 current_app.config["CUTTING_WEIGHT_INIT"] += 1
+                env = Env()
+                env.set("CUTTING_WEIGHT_INIT", current_app.config["CUTTING_WEIGHT_INIT"])
         elif data['action'] == 'del':
             title = data['title']
             UserOperation(user_id=current_user.id, operation=Operation.DELETE, title=title).save()
@@ -86,7 +88,7 @@ class ManualUpdate(MethodView):
         self.form = PushForm
 
     def get(self):
-        return render_template('mupdate.html', form=self.form(), pushtime=10)
+        return render_template('main/mupdate.html', form=self.form(), pushtime=10)
 
     def post(self):
         if current_user.can(Permission.MANUEL_PUSH):
@@ -137,7 +139,7 @@ class UserInfo(MethodView):
             user_info = User.query.filter_by(username=username, deleted=False).first()
             if not user_info:
                 abort(404)
-            return render_template('user.html', u=user_info, username=user_info.username)
+            return render_template('main/user.html', u=user_info, username=user_info.username)
         else:
             abort(403)
 
@@ -150,7 +152,7 @@ class UserList(MethodView):
 
     def get(self):
         userlist = User.query.filter_by(deleted=False).all()
-        return render_template('userlist.html', userlist=userlist, form=self.form())
+        return render_template('main/userlist.html', userlist=userlist, form=self.form())
 
     def post(self):
         data = request.get_json()
@@ -209,7 +211,7 @@ class EditProfile(MethodView):
                     return redirect(url_for('main.index'))
             else:
                 abort(403)
-        return render_template('edit_profile.html', form=form, u=current_user)
+        return render_template('main/edit_profile.html', form=form, u=current_user)
 
     def post(self, username):
         if not username:
@@ -255,7 +257,7 @@ class OperationLog(MethodView):
         foot_bar = PaginationBar(css_framework='bootstrap3', link_size='sm',
                                  show_single_page=False, page=page, per_page=per_page,
                                  total=count, format_total=True, format_number=True)
-        return render_template('log.html', records=query.items,
+        return render_template('main/log.html', records=query.items,
                                 page=page, per_page=per_page, pagination=foot_bar)
 
 
@@ -280,7 +282,7 @@ class KeywordBan(MethodView):
             'pagination': foot_bar,
             'form': self.form()
         }
-        return render_template('ban.html', **template_param)
+        return render_template('main/ban.html', **template_param)
 
     def post(self, page):
         data = request.get_json()
@@ -312,22 +314,24 @@ class WeiboAuthCallback(MethodView):
         self.auth_code = request.args.get("code")
         result = self.fresh_access()
         if result is True:
-            return render_template('success.html')
+            return render_template('main/success.html')
         else:
-            return render_template('failed.html', e=result)
+            return render_template('main/failed.html', e=result)
 
     def fresh_access(self):
-        callback = current_app.config["WEIBO_CALLBACK_URL"]
-        app_key = current_app.config["WEIBO_AUTH_CONFIG"]["APP_KEY"]
-        app_secret_key = current_app.config["WEIBO_AUTH_CONFIG"]["APP_SECRET"]
+        config = current_app.config["WEIBO_AUTH_CONFIG"]
+        callback = config["WEIBO_CALLBACK"]
+        app_key = config["WEIBO_AUTH_CONFIG"]["APP_KEY"]
+        app_secret_key = config["WEIBO_AUTH_CONFIG"]["APP_SECRET"]
         try:
             client = APIClient(app_key=app_key, app_secret=app_secret_key, redirect_uri=callback)
             token_data = client.request_access_token(self.auth_code)
             access_token, expires_in = token_data.access_token, token_data.expires_in
         except BaseException as e:
             return e
-        os.environ["ACCESS_TOKEN"] = access_token
-        current_app.config["ACCESS_TOKEN"] = access_token
-        os.environ["EXPIRE_TIME"] = expires_in
-        current_app.config["EXPIRE_TIME"] = expires_in
+        config["ACCESS_TOKEN"] = access_token
+        config["EXPIRE_TIME"] = expires_in
+        env = Env()
+        env.set("ACCESS_TOKEN", access_token)
+        env.set("EXPIRE_TIME", expires_in)
         return True

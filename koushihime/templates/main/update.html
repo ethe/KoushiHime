@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
-{% block title %}萌娘百科的更新姬-推送状态{% endblock %} 
-{% block scripts %} 
+{% block title %}萌娘百科的更新姬-推送状态{% endblock %}
+{% block scripts %}
 {{ super() }}
 <script type="text/javascript" src="/static/refresh.js" ></script>
 <script>
@@ -9,7 +9,7 @@ function sendtoken(callback,id){
     callback(id,csrftoken)
 }
 </script>
-{% endblock %} 
+{% endblock %}
 {% block mainbody %}
 <div class='row'>
     <p>本日剩余推送次数:{{ pushtime }}本日剩余删除次数:{{  deltime }}</p>
@@ -25,13 +25,13 @@ function sendtoken(callback,id){
             <tr>
                 <th>{{ loop.index + (page - 1) * per_page }}</th>
                 <th>
-                    <p>{{ title }}</p>
+                    <p>{{ title.title }}</p>
                 </th>
                 <th>
-                    <button class='btn btn-default' id='{{title}}' value='push' data-toggle='modal' data-target='#loadingModal' onclick='sendtoken(pushbtnclick,this.id)'>推送</button>
+                    <button class='btn btn-default' id='{{title.title}}' value='push' data-toggle='modal' data-target='#loadingModal' onclick='sendtoken(pushbtnclick,this.id)'>推送</button>
                 </th>
                 <th>
-                    <button class='btn btn-default' id='{{title}}' value='delete' data-toggle='modal' data-target='#loadingModal'  onclick='sendtoken(delbtnclick,this.id)'>删除</button>
+                    <button class='btn btn-default' id='{{title.title}}' value='delete' data-toggle='modal' data-target='#loadingModal'  onclick='sendtoken(delbtnclick,this.id)'>删除</button>
                 </th>
             </tr>
             {% endfor %}
