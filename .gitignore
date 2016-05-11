@@ -60,5 +60,8 @@ target/
 *.rdb
 *.aof
 
-#images
+#Custom
 imgcache/
+migrations/
+.idea/
+*.sqlite
