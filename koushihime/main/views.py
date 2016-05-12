@@ -261,7 +261,7 @@ class OperationLog(MethodView):
                                  show_single_page=False, page=page, per_page=per_page,
                                  total=count, format_total=True, format_number=True)
         return render_template('main/log.html', records=query.items,
-                                page=page, per_page=per_page, pagination=foot_bar)
+                                page=page, per_page=per_page, pagination=foot_bar, Operation=Operation)
 
 
 class KeywordBan(MethodView):

@@ -16,5 +16,6 @@ class Operation:
     DELETE = 2
     PUSH = 3
 
+    @staticmethod
     def translate(operation):
         return [u'屏蔽', u'推送', u'删除'][operation]

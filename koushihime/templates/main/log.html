@@ -14,13 +14,13 @@
                 </tr>
             </thead>
             <tbody>
-                {% for title in records %}
+                {% for item in records %}
                 <tr>
                     <td>{{ loop.index + (page - 1) * per_page }}</td>
-                    <td>{{ title }}</td>
-                    <td><a href='{{ url_for('main.admin_edit_profile',username=records[title][0]) }}'>{{ records[title][0] }}</a></td>
-                    <td>{{ records[title][1] }}</td>
-                    <td>{{ records[title][2] }}</td>
+                    <td>{{ item.title }}</td>
+                    <td><a href='{{ url_for('main.editprofile', username=item.handlers.username) }}'>{{ item.handlers.username }}</a></td>
+                    <td>{{ item.created_time }}</td>
+                    <td>{{ Operation.translate(item.operation) }}</td>
                 </tr>
                 {% endfor %}
             </tbody>
