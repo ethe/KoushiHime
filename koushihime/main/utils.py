@@ -1,7 +1,7 @@
 # -*- coding:utf-8 -*-
 
 import datetime
-from koushihime.main.models import PushRecord, WaitingList
+from koushihime.main.models import PushRecord, WaitingQueue
 
 
 def recent_have_pushed(title, hours=24):
@@ -13,7 +13,7 @@ def recent_have_pushed(title, hours=24):
 
 
 def have_auto_catched(title):
-    query = WaitingList.query.filter_by(title=title).all()
+    query = WaitingQueue.query.filter_by(title=title).all()
     if query:
         return True
     return False

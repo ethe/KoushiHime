@@ -8,7 +8,7 @@ from urllib2 import Request, urlopen
 from utils import make_celery
 from flask import current_app
 from koushihime.main.views import ManualUpdate
-from koushihime.main.models import WaitingList, PushRecord
+from koushihime.main.models import WaitingQueue, PushRecord
 from koushihime.utils import _decode_dict, Env
 from koushihime.utils.moegirl import MoegirlImage, get_recent_changes
 from koushihime.utils.weibo import APIClient
@@ -27,15 +27,15 @@ def check_update():
             if result:
                 image = MoegirlImage(title)
                 if image.path:
-                    entry = WaitingList(title=title.decode("utf-8"), image=image.path)
+                    entry = WaitingQueue(title=title.decode("utf-8"), image=image.path)
                     entry.save()
                     break
 
 
 @celery.task()
-def push():
+def push(retry=False):
     config = current_app.config["WEIBO_AUTH_CONFIG"]
-    entry = WaitingList.query.order_by(WaitingList.cutting_weight.desc()).first()
+    entry = WaitingQueue.query.order_by(WaitingQueue.cutting_weight.desc()).first()
     if entry:
         weibo_client = APIClient(app_key=config["APP_KEY"], app_secret=config["APP_SECRET"], redirect_uri=config["CALLBACK"])
         weibo_client.set_access_token(config["ACCESS_TOKEN"], config["EXPIRE_TIME"])
@@ -50,11 +50,17 @@ def push():
         record = PushRecord(title=entry.title, is_success=result)
         db.session.add(record)
         db.session.commit()
+    else:
+        if retry is False:
+            check_update()
+            push.retry()
+        else:
+            raise "Queue empty error"
 
 
 @celery.task()
 def reset():
-    query = WaitingList.query.filter_by().all()
+    query = WaitingQueue.query.filter_by().all()
     if query:
         for entry in query:
             db.session.delete(entry)

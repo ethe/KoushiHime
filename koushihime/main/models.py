@@ -17,8 +17,8 @@ class PushRecord(db.Model, CRUDMixin):
     is_success = db.Column(db.Boolean(), default=True)
 
 
-class WaitingList(db.Model, CRUDMixin):
-    __tablename__ = 'wating_list'
+class WaitingQueue(db.Model, CRUDMixin):
+    __tablename__ = 'wating_queue'
 
     id = db.Column(db.Integer(), primary_key=True)
     title = db.Column(db.Text(), index=True, unique=True)

@@ -13,7 +13,7 @@ from koushihime.utils.moegirl import MoegirlQuery, MoegirlImage
 from koushihime.utils.weibo import APIClient
 from . import main
 from utils import recent_have_pushed, have_auto_catched
-from models import WaitingList, BanList
+from models import WaitingQueue, BanList
 from forms import PushForm, AddUserForm, EditProfileForm, AdminEditProfileForm, BanKeywordForm
 
 
@@ -44,7 +44,7 @@ class Update(MethodView):
 
     def get(self, page):
         per_page = 10
-        unpushed_entry = WaitingList.query.order_by(WaitingList.cutting_weight.desc()).all()
+        unpushed_entry = WaitingQueue.query.order_by(WaitingQueue.cutting_weight.desc()).all()
         pagination = Pagination(unpushed_entry, per_page)
         current_page = pagination.page(page)
         foot_bar = PaginationBar(css_framework='bootstrap3', link_size='sm',
@@ -67,7 +67,7 @@ class Update(MethodView):
         if data['action'] == 'post':
             title = data["title"]
             current_weight = current_app.config["CUTTING_WEIGHT_INIT"]
-            entry = WaitingList.query.filter_by(title=title).first()
+            entry = WaitingQueue.query.filter_by(title=title).first()
             if entry:
                 entry.cutting_weight = current_weight + 1  # FIXME: 即使条目处于权重最高状态亦可增加权限
                 entry.save()
@@ -77,7 +77,7 @@ class Update(MethodView):
         elif data['action'] == 'del':
             title = data['title']
             UserOperation(user_id=current_user.id, operation=Operation.DELETE, title=title).save()
-            query = WaitingList.query.filter_by(title=data['title']).first()
+            query = WaitingQueue.query.filter_by(title=data['title']).first()
             if query:
                 query.delete()
         response = jsonify({'result': True})
@@ -102,7 +102,7 @@ class ManualUpdate(MethodView):
                 if result:
                     image = MoegirlImage(title)
                     if image.path:
-                        entry = WaitingList(title=title, image=image.path)
+                        entry = WaitingQueue(title=title, image=image.path)
                         current_weight = current_app.config["CUTTING_WEIGHT_INIT"]
                         entry.cutting_weight = current_weight + 1  # FIXME: 即使条目处于权重最高状态亦可增加权限
                         entry.save()

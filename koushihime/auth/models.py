@@ -31,7 +31,7 @@ class Role(db.Model, CRUDMixin):
     def init_roles():
         roles = {
             'Blocked': Permission.BLOCKED,
-            'Watchman': Permission.READ | Permission.MANUEL_PUSH,
+            'Watchman': Permission.READ | Permission.MANUAL_PUSH,
             'Administrator': 0xff
         }
         for r in roles:
