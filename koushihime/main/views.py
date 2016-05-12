@@ -9,7 +9,7 @@ from flask import render_template, redirect, url_for, request, jsonify, flash, c
 from koushihime.auth.models import UserOperation, User, Role
 from koushihime.auth.constants import Permission, Operation
 from koushihime.utils import Pagination, admin_required, Env
-from koushihime.utils.moegirl import MoegirlQuery
+from koushihime.utils.moegirl import MoegirlQuery, MoegirlImage
 from koushihime.utils.weibo import APIClient
 from . import main
 from utils import recent_have_pushed, have_auto_catched
@@ -94,26 +94,30 @@ class ManualUpdate(MethodView):
         return render_template('main/mupdate.html', form=self.form(), pushtime=10)
 
     def post(self):
-        if current_user.can(Permission.MANUEL_PUSH):
+        if current_user.can(Permission.MANUAL_PUSH):
             form = self.form(request.form)
             if form.validate():
                 title = form.pushtitle.data
-                result = self.check_push_validate(title)
+                result = self.check_push_validate(title.encode("utf-8"))
                 if result:
-                    current_weight = current_app.config["CUTTING_WEIGHT_INIT"]
-                    entry = WaitingList(title=title)
-                    entry.cutting_weight = current_weight + 1  # FIXME: 即使条目处于权重最高状态亦可增加权限
-                    entry.save()
-                    current_app.config["CUTTING_WEIGHT_INIT"] += 1
-                    UserOperation(user_id=current_user.id, title=title).save()
-                    flash(u"操作成功，词条将在下一次推送中推送")
+                    image = MoegirlImage(title)
+                    if image.path:
+                        entry = WaitingList(title=title, image=image.path)
+                        current_weight = current_app.config["CUTTING_WEIGHT_INIT"]
+                        entry.cutting_weight = current_weight + 1  # FIXME: 即使条目处于权重最高状态亦可增加权限
+                        entry.save()
+                        current_app.config["CUTTING_WEIGHT_INIT"] += 1
+                        UserOperation(user_id=current_user.id, title=title, operation=Operation.PUSH).save()
+                        flash(u"操作成功，词条将在下一次推送中推送")
+                    else:
+                        flash(u"无法取得图片，请重试")
                 else:
                     flash(u"推送条目被ban，或者已经在24小时之内推送过，或者已经被更新姬捕捉进精灵球")
             else:
                 flash(u"条目格式有问题，请检查并重新填写")
         else:
             flash(u"你没有权限")
-            return redirect(url_for('main.mupdate'))
+        return redirect(url_for('main.mupdate'))
 
     @staticmethod
     def check_push_validate(title):

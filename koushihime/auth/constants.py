@@ -7,7 +7,7 @@ class Permission:
     """
     BLOCKED = 0x00
     READ = 0x01
-    MANUEL_PUSH = 0x02
+    MANUAL_PUSH = 0x02
     ADMINISTER = 0x80
 
 
@@ -18,4 +18,4 @@ class Operation:
 
     @staticmethod
     def translate(operation):
-        return [u'屏蔽', u'推送', u'删除'][operation]
+        return [u'屏蔽', u'删除', u'推送'][operation - 1]
