@@ -323,9 +323,9 @@ class WeiboAuthCallback(MethodView):
 
     def fresh_access(self):
         config = current_app.config["WEIBO_AUTH_CONFIG"]
-        callback = config["WEIBO_CALLBACK"]
-        app_key = config["WEIBO_AUTH_CONFIG"]["APP_KEY"]
-        app_secret_key = config["WEIBO_AUTH_CONFIG"]["APP_SECRET"]
+        callback = config["CALLBACK"]
+        app_key = config["APP_KEY"]
+        app_secret_key = config["APP_SECRET"]
         try:
             client = APIClient(app_key=app_key, app_secret=app_secret_key, redirect_uri=callback)
             token_data = client.request_access_token(self.auth_code)
