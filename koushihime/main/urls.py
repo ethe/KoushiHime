@@ -1,7 +1,7 @@
 # -*- coding:utf-8 -*-
 
 from koushihime.main import main
-from views import Index, Update, UserInfo, UserList, EditProfile, OperationLog, ManualUpdate, KeywordBan
+from views import Index, Update, UserInfo, UserList, EditProfile, OperationLog, ManualUpdate, KeywordBan, WeiboAuthCallback
 
 
 update_view = Update.as_view('update')
@@ -33,3 +33,5 @@ main.add_url_rule('/log', view_func=operation_log_view,
 main.add_url_rule('/ban/<int:page>', view_func=ban_keyword_view)
 main.add_url_rule('/ban', view_func=ban_keyword_view,
                           defaults={'page': 1})
+
+main.add_url_rule('/code', view_func=WeiboAuthCallback.as_view("code"))
