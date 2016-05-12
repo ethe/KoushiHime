@@ -21,11 +21,11 @@ class Config(CelerySchedule):
     MOEGIRL_API_ROOT = "https://zh.moegirl.org/api.php"
 
     WEIBO_AUTH_CONFIG = {  # 微博登录验证配置
-        'APP_KEY': env.get('WEIBO_SECRET_KEY') or '563928974',
+        'APP_KEY': env.get('WEIBO_APP_KEY') or '563928974',
         'APP_SECRET': env.get('WEIBO_SECRET_KEY') or '',
         'CALLBACK': env.get('WEIBO_CALLBACK') or 'http://gengxinji.acg.moe/code',
         'ACCESS_TOKEN': env.get("ACCESS_TOKEN"),
-        'EXPIRE_TIME': env.get("EXPIRE_TIME") or 72 * 3600
+        'EXPIRE_TIME': env.get("EXPIRE_TIME") or str(72 * 3600)
     }
 
     # Celery配置

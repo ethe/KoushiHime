@@ -63,5 +63,5 @@ target/
 *.rdb
 *.aof
 
-#images
+#Custom
 imgcache/

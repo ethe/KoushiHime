@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-import os
+import urllib
 from datetime import datetime
 from flask.views import MethodView
 from flask.ext.login import current_user, login_required
@@ -33,7 +33,10 @@ class Index(MethodView):
     def get(self):
         if not current_user:
             return redirect(url_for("auth.login"))
-        return render_template('main/index.html')
+        config = current_app.config["WEIBO_AUTH_CONFIG"]
+        callback = urllib.quote(config["CALLBACK"])
+        app_key = config["APP_KEY"]
+        return render_template('main/index.html', callback=callback, app_key=app_key)
 
 
 class Update(MethodView):

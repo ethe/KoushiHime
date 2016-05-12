@@ -114,11 +114,11 @@ def _decode_dict(data):
 class Env(object):
 
     def __init__(self):
-        self.env = pickle.load(open('./environ', 'r'))
+        self.env = pickle.load(open('./environment', 'r'))
 
     def set(self, key, value):
         self.env[key] = value
-        pickle.dump(self.env, open('./environ', 'w'))
+        pickle.dump(self.env, open('./environment', 'w'))
         return self.env
 
     def get(self, key):
