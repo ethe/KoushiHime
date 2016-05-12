@@ -40,7 +40,7 @@ def push():
         weibo_client = APIClient(app_key=config["APP_KEY"], app_secret=config["APP_SECRET"], redirect_uri=config["CALLBACK"])
         weibo_client.set_access_token(config["ACCESS_TOKEN"], config["EXPIRE_TIME"])
         short_url = get_short_url(entry.title)
-        with open("{}/{}".format("./koushihime/imgcache", entry.image), 'rb') as f:
+        with open(entry.image, 'rb') as f:
             try:
                 weibo_client.statuses.upload.post(status=entry.title + short_url, pic=f)
                 result = True
