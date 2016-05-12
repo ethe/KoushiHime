@@ -54,9 +54,11 @@ def push():
 
 @celery.task()
 def reset():
-    query = WaitingList.query.filter_by()
-    db.session.delete(query)
-    db.commit()
+    query = WaitingList.query.filter_by().all()
+    if query:
+        for entry in query:
+            db.session.delete(entry)
+        db.commit()
     os.system("rm -f ./koushihime/imgcache/*")
     # 权重重置
     env = Env()
