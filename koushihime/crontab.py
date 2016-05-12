@@ -67,7 +67,7 @@ def reset():
 def get_short_url(title):
     config = current_app.config["WEIBO_AUTH_CONFIG"]
     request_url = 'https://api.weibo.com/2/short_url/shorten.json?access_token=' + \
-        config.get('ACCESS_TOKEN') + '&url_long=http://zh.moegirl.org/' + quote(title)
+        config.get('ACCESS_TOKEN') + '&url_long=http://zh.moegirl.org/' + quote(title.encode('utf-8'))
     req = Request(request_url)
     res = urlopen(req).read()
     data = json.loads(res, object_hook=_decode_dict)
