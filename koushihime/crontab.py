@@ -49,7 +49,7 @@ def push():
         db.session.delete(entry)
         record = PushRecord(title=entry.title, is_success=result)
         db.session.add(record)
-        db.commit()
+        db.session.commit()
 
 
 @celery.task()
