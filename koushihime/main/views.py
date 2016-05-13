@@ -340,5 +340,6 @@ class WeiboAuthCallback(MethodView):
         config["EXPIRE_TIME"] = expires_in
         env = Env()
         env.set("ACCESS_TOKEN", access_token)
+        env = Env()
         env.set("EXPIRE_TIME", expires_in)
         return True
