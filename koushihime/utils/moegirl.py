@@ -69,7 +69,7 @@ class MoegirlQuery(object):
             for rule_object in regex_list:
                 rule = rule_object.rule
                 if 'Category:' not in rule:
-                    if re.search(rule, self.title):
+                    if re.search(rule, self.title.decode("utf-8")):
                         return True
                 else:
                     categories = self.get_categories()
