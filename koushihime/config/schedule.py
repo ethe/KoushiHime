@@ -4,7 +4,7 @@ from celery.schedules import crontab
 
 
 class CelerySchedule:
-    CELERY_TIMEZONE = 'Etc/GMT+8'  # 时区设置
+    CELERY_TIMEZONE = 'Etc/GMT-8'  # 时区设置
     CELERYBEAT_SCHEDULE = {
         'midnight_push': {
             'task': 'tasks.push',
