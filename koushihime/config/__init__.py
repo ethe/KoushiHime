@@ -16,7 +16,6 @@ class Config(CelerySchedule):
     WTF_CSRF_ENABLED = True  # 启用csrf保护
     # SQLALCHEMY_COMMIT_ON_TEARDOWN = True  # 在每次会话被销毁前自动commit未commit的会话
     SQLALCHEMY_TRACK_MODIFICATIONS = True  # flask-sqlalchemy将追踪orm对象变化并发送信号
-    CUTTING_WEIGHT_INIT = 0  # 插队权重初始化
 
     MOEGIRL_API_ROOT = "https://zh.moegirl.org/api.php"
 
@@ -27,9 +26,6 @@ class Config(CelerySchedule):
         'ACCESS_TOKEN': env.get("ACCESS_TOKEN"),
         'EXPIRE_TIME': env.get("EXPIRE_TIME") or str(72 * 3600)
     }
-
-    # Celery配置
-    CELERY_TIMEZONE = 'Etc/GMT+8'  # 时区设置
 
     @staticmethod
     def init_app(app):  #: 初始化
@@ -42,20 +38,20 @@ class DevelopmentConfig(Config):
     SQLALCHEMY_DATABASE_URI = env.get('DEV_DATABASE_URL') or \
         'sqlite:///' + os.path.join(basedir, '../../data-dev.sqlite')
     # celery中间人
-    CELERY_BROKER_URL = SQLALCHEMY_DATABASE_URI
+    BROKER_URL = 'sqla+' + SQLALCHEMY_DATABASE_URI
 
 
 class TestingConfig(Config):
     TESTING = True
     SQLALCHEMY_DATABASE_URI = env.get('TEST_DATABASE_URL') or \
         'sqlite:///' + os.path.join(basedir, '../../data-test.sqlite')
-    CELERY_BROKER_URL = SQLALCHEMY_DATABASE_URI
+    BROKER_URL = 'sqla+' + SQLALCHEMY_DATABASE_URI
 
 
 class ProductionConfig(Config):
     SQLALCHEMY_DATABASE_URI = env.get('DATABASE_URL') or \
         'sqlite:///' + os.path.join(basedir, '../../data.sqlite')
-    CELERY_BROKER_URL = SQLALCHEMY_DATABASE_URI
+    BROKER_URL = 'sqla+' + SQLALCHEMY_DATABASE_URI
 
 
 config = {

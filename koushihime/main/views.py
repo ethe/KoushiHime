@@ -66,14 +66,13 @@ class Update(MethodView):
         data = request.get_json()
         if data['action'] == 'post':
             title = data["title"]
-            current_weight = current_app.config["CUTTING_WEIGHT_INIT"]
+            env = Env()
+            current_weight = env.get("CUTTING_WEIGHT_INIT")
             entry = WaitingQueue.query.filter_by(title=title).first()
             if entry:
                 entry.cutting_weight = current_weight + 1  # FIXME: 即使条目处于权重最高状态亦可增加权限
                 entry.save()
-                current_app.config["CUTTING_WEIGHT_INIT"] += 1
-                env = Env()
-                env.set("CUTTING_WEIGHT_INIT", current_app.config["CUTTING_WEIGHT_INIT"])
+                env.set("CUTTING_WEIGHT_INIT", entry.cutting_weight)
         elif data['action'] == 'del':
             title = data['title']
             UserOperation(user_id=current_user.id, operation=Operation.DELETE, title=title).save()
@@ -103,10 +102,11 @@ class ManualUpdate(MethodView):
                     image = MoegirlImage(title)
                     if image.path:
                         entry = WaitingQueue(title=title, image=image.path)
-                        current_weight = current_app.config["CUTTING_WEIGHT_INIT"]
-                        entry.cutting_weight = current_weight + 1  # FIXME: 即使条目处于权重最高状态亦可增加权限
+                        env = Env()
+                        current_weight = env.get("CUTTING_WEIGHT_INIT")
+                        entry.cutting_weight = current_weight + 1
                         entry.save()
-                        current_app.config["CUTTING_WEIGHT_INIT"] += 1
+                        env.set("CUTTING_WEIGHT_INIT", entry.cutting_weight)
                         UserOperation(user_id=current_user.id, title=title, operation=Operation.PUSH).save()
                         flash(u"操作成功，词条将在下一次推送中推送")
                     else:

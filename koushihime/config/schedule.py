@@ -4,6 +4,7 @@ from celery.schedules import crontab
 
 
 class CelerySchedule:
+    CELERY_TIMEZONE = 'Etc/GMT+8'  # 时区设置
     CELERYBEAT_SCHEDULE = {
         'midnight_push': {
             'task': 'tasks.push',
@@ -22,26 +23,26 @@ class CelerySchedule:
         },
         'afternoon_push': {
             'task': 'tasks.push',
-            'schedule': crontab(hour='10-17', minute='*/15'),
+            'schedule': crontab(hour='10-17', minute='0-59/15'),
             'args': (),
         },
         'late_afternoon_push': {
             'task': 'tasks.push',
-            'schedule': crontab(hour='18-21', minute='*/10'),
+            'schedule': crontab(hour='18-21', minute='0-59/10'),
             'args': (),
         },
         'evening_push': {
             'task': 'tasks.push',
-            'schedule': crontab(hour='22-23', minute='*/15'),
+            'schedule': crontab(hour='22-23', minute='0-59/15'),
             'args': (),
         },
         'check_update': {
-            'task': 'tasks.push',
-            'schedule': crontab(hour='0-23', minute='35,55'),
+            'task': 'tasks.check_update',
+            'schedule': crontab(hour='0-23', minute='0-59/15'),
             'args': (),
         },
         'reset': {
-            'task': 'tasks.push',
+            'task': 'tasks.reset',
             'schedule': crontab(hour='0', minute='5'),
             'args': (),
         }

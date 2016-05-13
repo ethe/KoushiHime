@@ -6,6 +6,7 @@ from flask_wtf.csrf import CsrfProtect
 from flask.ext.bootstrap import Bootstrap
 from flask.ext.moment import Moment
 from flask.ext.login import LoginManager
+from celery import Celery
 
 
 db = SQLAlchemy()
@@ -13,6 +14,7 @@ csrf = CsrfProtect()
 bootstrap = Bootstrap()
 moment = Moment()
 login_manager = LoginManager()
+celery = Celery("tasks")
 
 
 def create_app(config_name):
@@ -29,5 +31,6 @@ def create_app(config_name):
     moment.init_app(app)
     csrf.init_app(app)
     login_manager.init_app(app)
+    celery.conf.update(app.config)
 
     return app
