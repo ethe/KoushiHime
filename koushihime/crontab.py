@@ -65,7 +65,7 @@ def reset():
     if query:
         for entry in query:
             db.session.delete(entry)
-        db.commit()
+        db.session.commit()
     os.system("rm -f ./koushihime/imgcache/*")
     # 权重重置
     env = Env()
