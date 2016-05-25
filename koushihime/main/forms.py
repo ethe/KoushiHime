@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
 
 from flask.ext.wtf import Form
-from wtforms import StringField, SubmitField, PasswordField, TextAreaField, SelectField, validators
+from wtforms import StringField, SubmitField, PasswordField, TextAreaField, BooleanField, SelectField, validators
 
 
 class PushForm(Form):
     pushtitle = StringField(u'条目名', [validators.Required(), validators.Length(min=1, max=60)])
     submit = SubmitField(u'推送')
+    industry = BooleanField(u'立即推送')
 
 
 class EditProfileForm(Form):

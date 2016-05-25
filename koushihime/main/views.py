@@ -108,7 +108,12 @@ class ManualUpdate(MethodView):
                         entry.save()
                         env.set("CUTTING_WEIGHT_INIT", entry.cutting_weight)
                         UserOperation(user_id=current_user.id, title=title, operation=Operation.PUSH).save()
-                        flash(u"操作成功，词条将在下一次推送中推送")
+                        if form.industry.data:
+                            from koushihime.crontab import push
+                            push()
+                            flash(u"操作成功，词条将立即推送")
+                        else:
+                            flash(u"操作成功，词条将在下一次推送中推送")
                     else:
                         flash(u"无法取得图片，请重试")
                 else:
