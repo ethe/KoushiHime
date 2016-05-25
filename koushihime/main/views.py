@@ -109,8 +109,11 @@ class ManualUpdate(MethodView):
                         env.set("CUTTING_WEIGHT_INIT", entry.cutting_weight)
                         UserOperation(user_id=current_user.id, title=title, operation=Operation.PUSH).save()
                         if form.industry.data:
-                            from koushihime.crontab import push
-                            push()
+                            try:
+                                from koushihime.crontab import push
+                                push()
+                            except:
+                                pass
                             flash(u"操作成功，词条将立即推送")
                         else:
                             flash(u"操作成功，词条将在下一次推送中推送")
