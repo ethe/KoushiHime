@@ -48,7 +48,7 @@ class Update(MethodView):
         pagination = Pagination(unpushed_entry, per_page)
         current_page = pagination.page(page)
         foot_bar = PaginationBar(css_framework='bootstrap3', link_size='sm',
-                                 show_single_page=False, page=page,
+                                 show_single_page=True, page=page,
                                  per_page=per_page, total=pagination.pages_num,
                                  format_total=True, format_number=True)
         result = {

@@ -54,7 +54,7 @@ def push(retry=False):
     else:
         if retry is False:
             check_update()
-            push(retry=True)
+            return push(retry=True)
         else:
             raise "Queue empty error"
 
