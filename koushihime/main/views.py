@@ -50,7 +50,7 @@ class Update(MethodView):
         current_page = pagination.page(page)
         foot_bar = PaginationBar(css_framework='bootstrap3', link_size='sm',
                                  show_single_page=True, page=page,
-                                 per_page=per_page, total=pagination.pages_num,
+                                 per_page=per_page, total=len(unpushed_entry),
                                  format_total=True, format_number=True)
         result = {
             "titles": current_page,
