@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import urllib
+from urllib2 import HTTPError
 from datetime import datetime
 from flask.views import MethodView
 from flask.ext.login import current_user, login_required
@@ -99,7 +100,11 @@ class ManualUpdate(MethodView):
                 title = form.pushtitle.data
                 result = self.check_push_validate(title.encode("utf-8"))
                 if result:
-                    image = MoegirlImage(title)
+                    try:
+                        image = MoegirlImage(title)
+                    except HTTPError as e:
+                        flash(u"请求萌百错误，错误码如下{}，请联系管理员".format(e))
+                        return redirect(url_for('main.mupdate'))
                     if image.path:
                         entry = WaitingQueue(title=title, image=image.path)
                         env = Env()
