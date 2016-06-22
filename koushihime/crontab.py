@@ -7,7 +7,7 @@ from urllib import quote
 from urllib2 import Request, urlopen
 from flask import current_app
 from koushihime.main.views import ManualUpdate
-from koushihime.main.models import WaitingQueue, PushRecord
+from koushihime.main.models import WaitingQueue, PushRecord, RulePushCount
 from koushihime.utils import _decode_dict, Env
 from koushihime.utils.moegirl import MoegirlImage, get_recent_changes
 from koushihime.utils.weibo import APIClient
@@ -38,7 +38,9 @@ def push(retry=False):
     config = current_app.config["WEIBO_AUTH_CONFIG"]
     entry = WaitingQueue.query.order_by(WaitingQueue.cutting_weight.desc()).first()
     if entry:
-        weibo_client = APIClient(app_key=config["APP_KEY"], app_secret=config["APP_SECRET"], redirect_uri=config["CALLBACK"])
+        weibo_client = APIClient(app_key=config["APP_KEY"],
+                                 app_secret=config["APP_SECRET"],
+                                 redirect_uri=config["CALLBACK"])
         weibo_client.set_access_token(env.get("ACCESS_TOKEN"), env.get("EXPIRE_TIME"))
         short_url = get_short_url(entry.title)
         with open(entry.image, 'rb') as f:
@@ -70,6 +72,14 @@ def reset():
     # 权重重置
     env = Env()
     env.set("CUTTING_WEIGHT_INIT", 0)
+
+    # 正则检测规则推送次数限制重置
+    query = RulePushCount.query.filter_by().all()
+    if query:
+        for entry in query:
+            entry.count = entry.config.time_limit
+            db.session.add(entry)
+        db.session.commit()
 
 
 def get_short_url(title):

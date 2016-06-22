@@ -17,12 +17,14 @@ function sendtoken(callback, id) {
             <tr>
                 <th>序号</th>
                 <th>关键词</th>
+                <th>频率限制</th>
                 <th>删除</th>
             </tr>
             <tr>
             {% for keyword in keywords %}
                 <th>{{ loop.index + (page - 1) * per_page }}</th>
                 <th>{{ keyword.rule }}</th>
+                <th>{{ keyword.time_limit }}</th>
                 <th>
                     <button class='btn btn-default' id='{{keyword.rule}}' value='edit' onclick='sendtoken(delkeywordbtnclick,this.id)'>  删除</button>
                 </th>
@@ -34,8 +36,9 @@ function sendtoken(callback, id) {
     <div class="col-md-4 col-md-offset-1">
         <form method="POST">
             {{ form.hidden_tag() }}
-            {{ form.keyword.label }}{{ form.keyword(class='form-control',id='keyword') }}<br />
-            {{ form.submit(class='btn btn-primary form-control') }}<br />
+            {{ form.keyword.label }}{{ form.keyword(class='form-control',id='keyword') }}<br/>
+            {{ form.time_limit.label }}{{ form.time_limit(class='form-control')}}<br/>
+            {{ form.submit(class='btn btn-primary form-control') }}<br/>
         </form>
     </div>
 </div>
