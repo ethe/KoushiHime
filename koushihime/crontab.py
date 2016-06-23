@@ -13,6 +13,7 @@ from koushihime.utils.moegirl import MoegirlImage, get_recent_changes
 from koushihime.utils.weibo import APIClient
 
 
+# FIXME: 无用的flask context 引入，优先修复
 app = create_app(os.getenv('FLASK_CONFIG') or 'default')
 app.app_context().push()
 

@@ -125,7 +125,7 @@ class ManualUpdate(MethodView):
                     else:
                         flash(u"无法取得图片，请重试")
                 else:
-                    flash(u"推送条目被ban，或者已经在24小时之内推送过，或者已经被更新姬捕捉进精灵球")
+                    flash(u"推送条目被ban，或者已经在24小时之内推送过，或者已经进入待推送列表")
             else:
                 flash(u"条目格式有问题，请检查并重新填写")
         else:

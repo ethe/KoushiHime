@@ -64,7 +64,7 @@ class MoegirlQuery(object):
         return None
 
     def ban_from_regex(self):
-        regex_list = BanList.query.filter_by.all()
+        regex_list = BanList.query.all()
         if regex_list:
             for rule_object in regex_list:
                 rule = rule_object.rule
