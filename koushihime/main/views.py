@@ -329,7 +329,7 @@ class KeywordBan(MethodView):
                     status.save()
                     flash(u'添加关键词成功')
                 else:
-                    if exist.deleted == True:
+                    if exist.deleted is True:
                         exist.deleted = False
                         exist.time_limit = form.time_limit.data
                         exist.save()
