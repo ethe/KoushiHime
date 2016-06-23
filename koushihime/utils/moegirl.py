@@ -70,7 +70,7 @@ class MoegirlQuery(object):
                 rule = rule_object.rule
                 if 'Category:' not in rule:
                     if re.search(rule, self.title.decode("utf-8")):
-                        if rule.status.count == 0:
+                        if rule_object.status.count == 0:
                             return True
                         else:
                             self.fresh_rule_push_count(rule_object)
@@ -78,7 +78,7 @@ class MoegirlQuery(object):
                     categories = self.get_categories()
                     for category in categories:
                         if re.search(rule[len("Category"):].split(' ')[-1], category):
-                            if rule.status.count == 0:
+                            if rule_object.status.count == 0:
                                 return True
                             else:
                                 self.fresh_rule_push_count(rule_object)
