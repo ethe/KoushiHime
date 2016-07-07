@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import urllib
+from urllib2 import HTTPError
 from datetime import datetime
 from flask.views import MethodView
 from flask.ext.login import current_user, login_required
@@ -13,7 +14,7 @@ from koushihime.utils.moegirl import MoegirlQuery, MoegirlImage
 from koushihime.utils.weibo import APIClient
 from . import main
 from utils import recent_have_pushed, have_auto_catched
-from models import WaitingQueue, BanList
+from models import WaitingQueue, BanList, RulePushCount
 from forms import PushForm, AddUserForm, EditProfileForm, AdminEditProfileForm, BanKeywordForm
 
 
@@ -48,8 +49,8 @@ class Update(MethodView):
         pagination = Pagination(unpushed_entry, per_page)
         current_page = pagination.page(page)
         foot_bar = PaginationBar(css_framework='bootstrap3', link_size='sm',
-                                 show_single_page=False, page=page,
-                                 per_page=per_page, total=pagination.pages_num,
+                                 show_single_page=True, page=page,
+                                 per_page=per_page, total=len(unpushed_entry),
                                  format_total=True, format_number=True)
         result = {
             "titles": current_page,
@@ -99,7 +100,11 @@ class ManualUpdate(MethodView):
                 title = form.pushtitle.data
                 result = self.check_push_validate(title.encode("utf-8"))
                 if result:
-                    image = MoegirlImage(title)
+                    try:
+                        image = MoegirlImage(title)
+                    except HTTPError as e:
+                        flash(u"请求萌百错误，错误码如下{}，请联系管理员".format(e))
+                        return redirect(url_for('main.mupdate'))
                     if image.path:
                         entry = WaitingQueue(title=title, image=image.path)
                         env = Env()
@@ -108,11 +113,19 @@ class ManualUpdate(MethodView):
                         entry.save()
                         env.set("CUTTING_WEIGHT_INIT", entry.cutting_weight)
                         UserOperation(user_id=current_user.id, title=title, operation=Operation.PUSH).save()
-                        flash(u"操作成功，词条将在下一次推送中推送")
+                        if form.industry.data:
+                            try:
+                                from koushihime.crontab import push
+                                push()
+                            except:
+                                pass
+                            flash(u"操作成功，词条将立即推送")
+                        else:
+                            flash(u"操作成功，词条将在下一次推送中推送")
                     else:
                         flash(u"无法取得图片，请重试")
                 else:
-                    flash(u"推送条目被ban，或者已经在24小时之内推送过，或者已经被更新姬捕捉进精灵球")
+                    flash(u"推送条目被ban，或者已经在24小时之内推送过，或者已经进入待推送列表")
             else:
                 flash(u"条目格式有问题，请检查并重新填写")
         else:
@@ -277,8 +290,9 @@ class KeywordBan(MethodView):
     def get(self, page):
         per_page = 10
         count = BanList.query.filter_by(deleted=False).count()
+        # TODO: 把关键词读入配置减少查询次数
         pagination = BanList.query.filter_by(deleted=False)\
-                                  .paginate(page=page, per_page=per_page, error_out=False)  # TODO: 把关键词读入配置减少查询次数
+                                  .paginate(page=page, per_page=per_page, error_out=False)
         foot_bar = PaginationBar(css_framework='bootstrap3', link_size='sm',
                                  show_single_page=False, page=page, per_page=per_page,
                                  total=count, format_total=True, format_number=True)
@@ -297,6 +311,8 @@ class KeywordBan(MethodView):
             keyword = data['keyword']
             result = BanList.query.filter_by(rule=keyword).first()
             if result:
+                if result.status:
+                    result.status.delete()
                 result.delete()
                 flash(u'成功删除关键词')
             else:
@@ -305,12 +321,22 @@ class KeywordBan(MethodView):
         elif request.form:
             form = self.form(request.form)
             if form.validate():
-                if not BanList.query.filter_by(rule=form.keyword.data).first():
-                    ban = BanList(rule=form.keyword.data)
+                exist = BanList.query.filter_by(rule=form.keyword.data).first()
+                if not exist:
+                    ban = BanList(rule=form.keyword.data, time_limit=form.time_limit.data)
                     ban.save()
+                    status = RulePushCount(rule_id=ban.id, count=ban.time_limit)
+                    status.save()
                     flash(u'添加关键词成功')
                 else:
-                    flash(u'重复添加关键词')
+                    if exist.deleted is True:
+                        exist.deleted = False
+                        exist.time_limit = form.time_limit.data
+                        exist.save()
+                        status = RulePushCount(rule_id=exist.id, count=exist.time_limit)
+                        status.save()
+                    else:
+                        flash(u'重复添加关键词')
         return redirect(url_for('main.ban'))
 
 

@@ -70,13 +70,24 @@ class MoegirlQuery(object):
                 rule = rule_object.rule
                 if 'Category:' not in rule:
                     if re.search(rule, self.title.decode("utf-8")):
-                        return True
+                        if rule_object.status.count == 0:
+                            return True
+                        else:
+                            self.fresh_rule_push_count(rule_object)
                 else:
                     categories = self.get_categories()
                     for category in categories:
-                        if re.search(rule, category):
-                            return True
+                        if re.search(rule[len("Category"):].split(' ')[-1], category):
+                            if rule_object.status.count == 0:
+                                return True
+                            else:
+                                self.fresh_rule_push_count(rule_object)
         return False
+
+    @staticmethod
+    def fresh_rule_push_count(rule_object):
+        rule_object.status.count -= 1
+        rule_object.save()
 
 
 class MoegirlImage(object):

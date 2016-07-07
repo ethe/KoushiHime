@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 {% block title %}萌娘百科的更新姬-手动推送{% endblock %}
-{% block scripts %} 
+{% block scripts %}
 {{ super() }}
 <script type="text/javascript" src="/static/refresh.js" ></script>
 <script>
@@ -9,7 +9,7 @@ function sendtoken(callback,id){
     callback(id,csrftoken)
 }
 </script>
-{% endblock %} 
+{% endblock %}
 {% block mainbody %}
 <div class='col-md-8 col-md-offset-4'>
         <p>本日剩余推送次数:{{ pushtime }}</p>
@@ -19,8 +19,11 @@ function sendtoken(callback,id){
     <form method='POST'>
     {{ form.hidden_tag() }}
     {{ form.pushtitle.label }}{{ form.pushtitle(class='form-control',id=pushtitle,placeholder='条目名') }}
+    {% if current_user.id in [1, 2] %}
+    {{ form.industry.label }} {{ form.industry() }}
+    {% endif %}
     <br />
-    {{form.submit(class='btn btn-primary')}}  
+    {{form.submit(class='btn btn-primary')}}
     </form>
 </div>
 </div>

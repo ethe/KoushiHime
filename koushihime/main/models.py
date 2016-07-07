@@ -35,3 +35,13 @@ class BanList(db.Model, CRUDMixin):
     rule = db.Column(db.Text(), unique=True)
     deleted = db.Column(db.Boolean(), default=False)
     created_time = db.Column(db.DateTime(), default=datetime.utcnow)
+    time_limit = db.Column(db.Integer(), default=0)
+    status = db.relationship('RulePushCount', backref='config', uselist=False)
+
+
+class RulePushCount(db.Model, CRUDMixin):
+    __tablename__ = "rule_push_counts"
+
+    id = db.Column(db.Integer(), primary_key=True)
+    rule_id = db.Column(db.Integer(), db.ForeignKey('ban_list.id'))
+    count = db.Column(db.Integer(), default=0)
