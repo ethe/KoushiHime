@@ -86,7 +86,7 @@ def reset():
 def get_short_url(title):
     env = Env()
     request_url = 'https://api.weibo.com/2/short_url/shorten.json?access_token=' + \
-        env.get('ACCESS_TOKEN') + '&url_long=http://zh.moegirl.org/' + quote(title.encode('utf-8'))
+        env.get('ACCESS_TOKEN') + '&url_long=https://zh.moegirl.org/' + quote(title.encode('utf-8'))
     req = Request(request_url)
     res = urlopen(req).read()
     data = json.loads(res, object_hook=_decode_dict)
