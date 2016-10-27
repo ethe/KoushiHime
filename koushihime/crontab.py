@@ -4,7 +4,7 @@ import os
 import json
 from koushihime import db, celery, create_app
 from urllib import quote
-from urllib2 import Request, urlopen
+from urllib2 import Request, urlopen, HTTPError
 from flask import current_app
 from koushihime.main.views import ManualUpdate
 from koushihime.main.models import WaitingQueue, PushRecord, RulePushCount
@@ -20,7 +20,12 @@ app.app_context().push()
 
 @celery.task(name='tasks.check_update')
 def check_update():
-    change_list = get_recent_changes()
+    try:
+        change_list = get_recent_changes()
+    except HTTPError as e:
+        print e.code, e.msg
+        raise e
+
     for i in change_list:
         if i['newlen'] >= 1000:
             title = i['title']
