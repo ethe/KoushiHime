@@ -51,7 +51,7 @@ class AdminEditProfileForm(Form):
 
 
 class BanKeywordForm(Form):
-    keyword = StringField(u'屏蔽关键词(请使用python正则表达式书写)', [validators.Length(min=3, max=100), validators.Required()])
+    keyword = StringField(u'屏蔽关键词(请使用python正则表达式书写)', [validators.Length(min=0, max=100), validators.Required()])
     time_limit = IntegerField(u'一天内限制推送次数，缺省为0即永远不推送', default=0)
     submit = SubmitField(u'提交')
 
