@@ -24,22 +24,21 @@ def check_update():
     except HTTPError as e:
         print e.code, e.msg
         raise e
-
-    for i in change_list:
-        if i['newlen'] >= 1000:
-            title = i['title']
-            result = ManualUpdate.check_push_validate(title)
-            if result:
-                image = MoegirlImage(title)
-                if image.path:
-                    entry = WaitingQueue(title=title.decode("utf-8"), image=image.path)
-                    entry.save()
-                    break
+    with app.app_context():
+        for i in change_list:
+            if i['newlen'] >= 1000:
+                title = i['title']
+                result = ManualUpdate.check_push_validate(title)
+                if result:
+                    image = MoegirlImage(title)
+                    if image.path:
+                        entry = WaitingQueue(title=title.decode("utf-8"), image=image.path)
+                        entry.save()
+                        break
 
 
 @celery.task(name='tasks.push')
 def push(retry=False):
-    app = create_app(os.getenv('FLASK_CONFIG') or 'default')
     with app.app_context():
         env = Env()
         entry = WaitingQueue.query.order_by(WaitingQueue.cutting_weight.desc()).first()
@@ -67,7 +66,6 @@ def push(retry=False):
 
 @celery.task(name='tasks.reset')
 def reset():
-    app = create_app(os.getenv('FLASK_CONFIG') or 'default')
     with app.app_context():
         query = WaitingQueue.query.filter_by().all()
         if query:
