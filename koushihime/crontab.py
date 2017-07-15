@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import os
+from flask import current_app
 from urllib import quote
 from koushihime import db, celery, create_app
 from urllib2 import HTTPError
@@ -9,6 +10,11 @@ from koushihime.main.models import WaitingQueue, PushRecord, RulePushCount
 from koushihime.utils import Env
 from koushihime.utils.moegirl import MoegirlImage, get_recent_changes
 from koushihime.utils.weibo import WeiboAPI
+
+
+app = create_app(os.getenv('FLASK_CONFIG') or 'default')
+with app.app_context():
+    celery.conf.update(current_app.config)
 
 
 @celery.task(name='tasks.check_update')
