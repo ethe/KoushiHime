@@ -31,7 +31,7 @@ class WeiboAPI(object):
     def post(self, content, pic=None):
         data = {'content': content, 'st': self.st}
         if pic:
-            pic['picId'] = pic
+            data['picId'] = pic
         resp = requests.post(self.post_path, headers=self.headers, data=data)
         try:
             return resp.json()
