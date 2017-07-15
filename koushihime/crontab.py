@@ -1,21 +1,14 @@
 # -*- coding: utf-8 -*-
 
 import os
-import json
-from koushihime import db, celery, create_app
 from urllib import quote
-from urllib2 import Request, urlopen, HTTPError
-from flask import current_app
+from koushihime import db, celery, create_app
+from urllib2 import HTTPError
 from koushihime.main.views import ManualUpdate
 from koushihime.main.models import WaitingQueue, PushRecord, RulePushCount
-from koushihime.utils import _decode_dict, Env
+from koushihime.utils import Env
 from koushihime.utils.moegirl import MoegirlImage, get_recent_changes
-from koushihime.utils.weibo import APIClient
-
-
-# FIXME: 无用的flask context 引入，优先修复
-app = create_app(os.getenv('FLASK_CONFIG') or 'default')
-app.app_context().push()
+from koushihime.utils.weibo import WeiboAPI
 
 
 @celery.task(name='tasks.check_update')
@@ -40,60 +33,50 @@ def check_update():
 
 @celery.task(name='tasks.push')
 def push(retry=False):
-    env = Env()
-    config = current_app.config["WEIBO_AUTH_CONFIG"]
-    entry = WaitingQueue.query.order_by(WaitingQueue.cutting_weight.desc()).first()
-    if entry:
-        weibo_client = APIClient(app_key=config["APP_KEY"],
-                                 app_secret=config["APP_SECRET"],
-                                 redirect_uri=config["CALLBACK"])
-        weibo_client.set_access_token(env.get("ACCESS_TOKEN"), env.get("EXPIRE_TIME"))
-        short_url = get_short_url(entry.title)
-        with open(entry.image, 'rb') as f:
-            try:
-                weibo_client.statuses.upload.post(status=entry.title + short_url, pic=f)
-                result = True
-            except:
-                result = False
-        db.session.delete(entry)
-        record = PushRecord(title=entry.title, is_success=result)
-        db.session.add(record)
-        db.session.commit()
-    else:
-        if retry is False:
-            check_update()
-            return push(retry=True)
+    app = create_app(os.getenv('FLASK_CONFIG') or 'default')
+    with app.app_context():
+        env = Env()
+        entry = WaitingQueue.query.order_by(WaitingQueue.cutting_weight.desc()).first()
+        if entry:
+            weibo = WeiboAPI(env.get("COOKIE"))
+            with open(entry.image, 'rb') as f:
+                resp = weibo.post(
+                    entry.title + ' ' + 'https://zh.moegirl.org/' + quote(entry.title.encode('utf-8')),
+                    pic=weibo.upload_image(f)['pic_id'])
+                if isinstance(resp, dict) and resp['ok'] == 1:
+                    result = True
+                else:
+                    result = False
+            db.session.delete(entry)
+            record = PushRecord(title=entry.title, is_success=result)
+            db.session.add(record)
+            db.session.commit()
         else:
-            raise "Queue empty error"
+            if retry is False:
+                check_update()
+                return push(retry=True)
+            else:
+                raise Exception("Queue empty error")
 
 
 @celery.task(name='tasks.reset')
 def reset():
-    query = WaitingQueue.query.filter_by().all()
-    if query:
-        for entry in query:
-            db.session.delete(entry)
-        db.session.commit()
-    os.system("rm -f ./koushihime/imgcache/*")
-    # 权重重置
-    env = Env()
-    env.set("CUTTING_WEIGHT_INIT", 0)
+    app = create_app(os.getenv('FLASK_CONFIG') or 'default')
+    with app.app_context():
+        query = WaitingQueue.query.filter_by().all()
+        if query:
+            for entry in query:
+                db.session.delete(entry)
+            db.session.commit()
+        os.system("rm -f ./koushihime/imgcache/*")
+        # 权重重置
+        env = Env()
+        env.set("CUTTING_WEIGHT_INIT", 0)
 
-    # 正则检测规则推送次数限制重置
-    query = RulePushCount.query.filter_by().all()
-    if query:
-        for entry in query:
-            entry.count = entry.config.time_limit
-            db.session.add(entry)
-        db.session.commit()
-
-
-def get_short_url(title):
-    env = Env()
-    request_url = 'https://api.weibo.com/2/short_url/shorten.json?access_token=' + \
-        env.get('ACCESS_TOKEN') + '&url_long=https://zh.moegirl.org/' + quote(title.encode('utf-8'))
-    req = Request(request_url)
-    res = urlopen(req).read()
-    data = json.loads(res, object_hook=_decode_dict)
-    short_url = data['urls'][0]['url_short']
-    return short_url
+        # 正则检测规则推送次数限制重置
+        query = RulePushCount.query.filter_by().all()
+        if query:
+            for entry in query:
+                entry.count = entry.config.time_limit
+                db.session.add(entry)
+            db.session.commit()
