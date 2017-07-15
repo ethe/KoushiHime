@@ -11,7 +11,7 @@ from koushihime.auth.models import UserOperation, User, Role
 from koushihime.auth.constants import Permission, Operation
 from koushihime.utils import Pagination, admin_required, Env
 from koushihime.utils.moegirl import MoegirlQuery, MoegirlImage
-from koushihime.utils.weibo import APIClient
+# from koushihime.utils.weibo import APIClient
 from . import main
 from utils import recent_have_pushed, have_auto_catched
 from models import WaitingQueue, BanList, RulePushCount
@@ -273,12 +273,12 @@ class OperationLog(MethodView):
         per_page = 10
         count = UserOperation.query.count()
         query = UserOperation.query.order_by(UserOperation.id.desc())\
-                                  .paginate(page=page, per_page=per_page, error_out=False)
+                                   .paginate(page=page, per_page=per_page, error_out=False)
         foot_bar = PaginationBar(css_framework='bootstrap3', link_size='sm',
                                  show_single_page=False, page=page, per_page=per_page,
                                  total=count, format_total=True, format_number=True)
         return render_template('main/log.html', records=query.items,
-                                page=page, per_page=per_page, pagination=foot_bar, Operation=Operation)
+                               page=page, per_page=per_page, pagination=foot_bar, Operation=Operation)
 
 
 class KeywordBan(MethodView):
@@ -352,20 +352,21 @@ class WeiboAuthCallback(MethodView):
             return render_template('main/failed.html', e=result)
 
     def fresh_access(self):
-        config = current_app.config["WEIBO_AUTH_CONFIG"]
-        callback = config["CALLBACK"]
-        app_key = config["APP_KEY"]
-        app_secret_key = config["APP_SECRET"]
+        # config = current_app.config["WEIBO_AUTH_CONFIG"]
+        # callback = config["CALLBACK"]
+        # app_key = config["APP_KEY"]
+        # app_secret_key = config["APP_SECRET"]
         try:
-            client = APIClient(app_key=app_key, app_secret=app_secret_key, redirect_uri=callback)
-            token_data = client.request_access_token(self.auth_code)
-            access_token, expires_in = token_data.access_token, token_data.expires_in
+            pass
+            # client = APIClient(app_key=app_key, app_secret=app_secret_key, redirect_uri=callback)
+            # token_data = client.request_access_token(self.auth_code)
+            # access_token, expires_in = token_data.access_token, token_data.expires_in
         except BaseException as e:
             return e
-        config["ACCESS_TOKEN"] = access_token
-        config["EXPIRE_TIME"] = expires_in
-        env = Env()
-        env.set("ACCESS_TOKEN", access_token)
-        env = Env()
-        env.set("EXPIRE_TIME", expires_in)
+        # config["ACCESS_TOKEN"] = access_token
+        # config["EXPIRE_TIME"] = expires_in
+        # env = Env()
+        # env.set("ACCESS_TOKEN", access_token)
+        # env = Env()
+        # env.set("EXPIRE_TIME", expires_in)
         return True
