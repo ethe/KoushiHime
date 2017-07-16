@@ -15,7 +15,10 @@ class WeiboAPI(object):
                'Accept-Language': 'zh-CN,zh;q=0.8,zh-TW;q=0.6,en;q=0.4',
                'Connection': 'keep-alive',
                'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/59.0.3071.115 Safari/537.36',
-               'X-Requested-With': 'XMLHttpRequest'}
+               'X-Requested-With': 'XMLHttpRequest',
+               'Host': 'm.weibo.cn',
+               'Origin': 'https://m.weibo.cn',
+               'Referer': 'https://m.weibo.cn/compose'}
     upload_path = 'https://m.weibo.cn/api/statuses/uploadPic'
     post_path = 'https://m.weibo.cn/api/statuses/update'
 
