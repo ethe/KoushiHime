@@ -25,16 +25,16 @@ def check_update():
         except HTTPError as e:
             print e.code, e.msg
             raise e
-            for i in change_list:
-                if i['newlen'] >= 1000:
-                    title = i['title']
-                    result = ManualUpdate.check_push_validate(title)
-                    if result:
-                        image = MoegirlImage(title)
-                        if image.path:
-                            entry = WaitingQueue(title=title.decode("utf-8"), image=image.path)
-                            entry.save()
-                            break
+        for i in change_list:
+            if i['newlen'] >= 1000:
+                title = i['title']
+                result = ManualUpdate.check_push_validate(title)
+                if result:
+                    image = MoegirlImage(title)
+                    if image.path:
+                        entry = WaitingQueue(title=title.decode("utf-8"), image=image.path)
+                        entry.save()
+                        break
 
 
 @celery.task(name='tasks.push')
