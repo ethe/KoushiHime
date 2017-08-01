@@ -120,7 +120,7 @@ class MoegirlImage(object):
             for image in image_div:
                 imgtag = image.find('img')
                 if (int(imgtag['width']) > 200 and int(imgtag['height']) > 100):
-                    image_url = imgtag['src']
+                    image_url = imgtag['srcset' if 'srcset' in imgtag else 'src']
                     break
         except:
             return None
