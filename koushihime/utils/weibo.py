@@ -44,7 +44,7 @@ class WeiboAPI(object):
     @property
     def st(self):
         return requests.get(
-            "https://m.weibo.cn/api/config", headers=self.headers).json()['st']
+            "https://m.weibo.cn/api/config", headers=self.headers).json()['data']['st']
 
     def encode_body(self, **kw):
         ' build a multipart/form-data body with randomly generated boundary '
