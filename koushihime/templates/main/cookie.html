@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+{% block title %}萌娘百科的更新姬-手动推送{% endblock %}
+{% block scripts %}
+{{ super() }}
+<script type="text/javascript" src="/static/refresh.js" ></script>
+<script>
+function sendtoken(callback,id){
+    var csrftoken = "{{ csrf_token() }}"
+    callback(id,csrftoken)
+}
+</script>
+{% endblock %}
+{% block mainbody %}
+<div class='col-md-4 col-md-offset-4'>
+    <form method='POST'>
+    {{ form.hidden_tag() }}
+    {{ form.cookie.label }}{{ form.cookie(class='form-control',id=cookie,placeholder='Cookie') }}
+    <br />
+    {{form.submit(class='btn btn-primary')}}
+    </form>
+</div>
+</div>
+{% endblock %}

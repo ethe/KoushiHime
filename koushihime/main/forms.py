@@ -61,3 +61,8 @@ class LimitKeywordForm(Form):
     catsubmit = SubmitField(u'提交')
     limittopic = StringField(u'限制标题(请使用python正则表达式书写)', [validators.Length(min=3, max=100), validators.Required()])
     topicsubmit = SubmitField(u'提交')
+
+
+class CookieForm(Form):
+    cookie = TextAreaField(u'Cookie', [validators.required()])
+    submit = SubmitField(u'提交')

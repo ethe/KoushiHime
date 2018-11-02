@@ -11,11 +11,10 @@ from koushihime.auth.models import UserOperation, User, Role
 from koushihime.auth.constants import Permission, Operation
 from koushihime.utils import Pagination, admin_required, Env
 from koushihime.utils.moegirl import MoegirlQuery, MoegirlImage
-# from koushihime.utils.weibo import APIClient
 from . import main
 from utils import recent_have_pushed, have_auto_catched
 from models import WaitingQueue, BanList, RulePushCount
-from forms import PushForm, AddUserForm, EditProfileForm, AdminEditProfileForm, BanKeywordForm
+from forms import PushForm, AddUserForm, EditProfileForm, AdminEditProfileForm, BanKeywordForm, CookieForm
 
 
 @main.before_request
@@ -94,42 +93,40 @@ class ManualUpdate(MethodView):
         return render_template('main/mupdate.html', form=self.form(), pushtime=10)
 
     def post(self):
-        if current_user.can(Permission.MANUAL_PUSH):
-            form = self.form(request.form)
-            if form.validate():
-                title = form.pushtitle.data
-                result = self.check_push_validate(title.encode("utf-8"))
-                if result:
-                    try:
-                        image = MoegirlImage(title)
-                    except HTTPError as e:
-                        flash(u"请求萌百错误，错误码如下{}，请联系管理员".format(e))
-                        return redirect(url_for('main.mupdate'))
-                    if image.path:
-                        entry = WaitingQueue(title=title, image=image.path)
-                        env = Env()
-                        current_weight = env.get("CUTTING_WEIGHT_INIT")
-                        entry.cutting_weight = current_weight + 1
-                        entry.save()
-                        env.set("CUTTING_WEIGHT_INIT", entry.cutting_weight)
-                        UserOperation(user_id=current_user.id, title=title, operation=Operation.PUSH).save()
-                        if form.industry.data:
-                            try:
-                                from koushihime.crontab import push
-                                push()
-                            except:
-                                pass
-                            flash(u"操作成功，词条将立即推送")
-                        else:
-                            flash(u"操作成功，词条将在下一次推送中推送")
-                    else:
-                        flash(u"无法取得图片，请重试")
-                else:
-                    flash(u"推送条目被ban，或者已经在24小时之内推送过，或者已经进入待推送列表")
-            else:
-                flash(u"条目格式有问题，请检查并重新填写")
-        else:
+        if not current_user.can(Permission.MANUAL_PUSH):
             flash(u"你没有权限")
+
+        form = self.form(request.form)
+        if not form.validate():
+            flash(u"条目格式有问题，请检查并重新填写")
+
+        title = form.pushtitle.data
+        result = self.check_push_validate(title.encode("utf-8"))
+        if not result:
+            flash(u"推送条目被ban，或者已经在24小时之内推送过，或者已经进入待推送列表")
+
+        try:
+            image = MoegirlImage(title)
+        except HTTPError as e:
+            flash(u"请求萌百错误，错误码如下{}，请联系管理员".format(e))
+            return redirect(url_for('main.mupdate'))
+        if not image.path:
+            flash(u"无法取得图片，请重试")
+
+        entry = WaitingQueue(title=title, image=image.path)
+        env = Env()
+        current_weight = env.get("CUTTING_WEIGHT_INIT")
+        entry.cutting_weight = current_weight + 1
+        entry.save()
+        env.set("CUTTING_WEIGHT_INIT", entry.cutting_weight)
+        UserOperation(user_id=current_user.id, title=title, operation=Operation.PUSH).save()
+        if form.industry.data:
+            try:
+                from koushihime.crontab import push
+                push()
+            except Exception as e:
+                flash(u"推送失败: {}".format(str(e)))
+            flash(u"操作成功，词条将立即推送")
         return redirect(url_for('main.mupdate'))
 
     @staticmethod
@@ -142,9 +139,9 @@ class ManualUpdate(MethodView):
             has_pushed = recent_have_pushed(title.decode("utf-8"))  # TODO: 改成自动冒泡
             has_catched = have_auto_catched(title.decode("utf-8"))
             result = baned_from_moegirl is False \
-                        and has_pushed is False \
-                        and has_catched is False \
-                        and baned_from_regex is False
+                and has_pushed is False \
+                and has_catched is False \
+                and baned_from_regex is False
             return result
         else:
             return False
@@ -340,6 +337,7 @@ class KeywordBan(MethodView):
         return redirect(url_for('main.ban'))
 
 
+# TODO: deprecated
 class WeiboAuthCallback(MethodView):
     decorators = [login_required, admin_required]
 
@@ -370,3 +368,23 @@ class WeiboAuthCallback(MethodView):
         # env = Env()
         # env.set("EXPIRE_TIME", expires_in)
         return True
+
+
+class Cookie(MethodView):
+    decorators = [login_required, admin_required]
+
+    def __init__(self):
+        self.form = CookieForm
+
+    def get(self):
+        return render_template('main/cookie.html', form=self.form(), pushtime=10)
+
+    def post(self):
+        form = self.form(request.form)
+        if not form.validate():
+            flash(u"表单不合法")
+        cookie = form.cookie.data
+        env = Env()
+        env.set("COOKIE", cookie)
+        flash(u"设置 Cookie 成功")
+        return redirect(url_for('main.cookie'))

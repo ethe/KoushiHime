@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-
 class Permission:
     """
     使用位运算标记用户权限
