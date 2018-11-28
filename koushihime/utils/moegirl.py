@@ -175,12 +175,14 @@ def get_recent_changes():
     utc = datetime.utcnow()
     rcstart = (utc - timedelta(hours=1)).strftime(date_format)
     rcend = utc.strftime(date_format)
-    parmas = urlencode({'format': 'json', 'action': 'query', 'list': 'recentchanges', 'rcstart': rcstart, 'rcend': rcend,
-                               'rcdir': 'newer', 'rcnamespace': '0', 'rctoponly': '', 'rctype': 'edit|new', 'continue': '',
-                               'rcprop': 'title|sizes'})
+    parmas = urlencode({
+        'format': 'json', 'action': 'query', 'list': 'recentchanges', 'rcstart': rcstart, 'rcend': rcend,
+        'rcdir': 'newer', 'rcnamespace': '0', 'rctoponly': '', 'rctype': 'edit|new', 'continue': '',
+        'rcprop': 'title|sizes'
+    })
     req = Request(url=apiurl, data=parmas)
     res_data = urlopen(req)
     ori = res_data.read()
     change_query = json.loads(ori, object_hook=_decode_dict)
     change_list = change_query['query']['recentchanges']
-    return change_list
+    return filter(lambda x: x['newlen'] - x['oldlen'] > 20, change_list)
